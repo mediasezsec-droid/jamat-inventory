@@ -1,9 +1,3 @@
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-    title: "Create New Event",
-    description: "Create a new event with hall booking, caterer selection, and inventory allocation. Comprehensive event planning for Jamaat occasions.",
-};
 
 "use client";
 

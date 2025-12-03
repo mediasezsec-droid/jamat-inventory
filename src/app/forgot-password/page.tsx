@@ -1,9 +1,3 @@
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-    title: "Reset Password",
-    description: "Reset your password with email verification. Secure OTP-based password recovery for Jamaat Inventory System.",
-};
 
 "use client";
 

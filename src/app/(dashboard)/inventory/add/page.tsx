@@ -1,9 +1,3 @@
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-    title: "Add Inventory Item",
-    description: "Add a new item to your inventory. Specify name, category, quantity, unit, and description for complete tracking.",
-};
 
 "use client";
 

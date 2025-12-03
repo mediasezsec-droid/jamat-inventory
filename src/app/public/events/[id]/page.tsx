@@ -1,34 +1,3 @@
-import type { Metadata } from "next";
-import { db } from "@/lib/firebase";
-
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-    const { id } = await params;
-    try {
-        const eventDoc = await db.collection("events").doc(id).get();
-
-        if (!eventDoc.exists) {
-            return { title: "Event Not Found", description: "The requested event could not be found." };
-        }
-
-        const event = eventDoc.data();
-        const eventDate = event?.occasionDate ? new Date(event.occasionDate).toLocaleDateString('en-US', {
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-        }) : 'TBA';
-        const hall = Array.isArray(event?.hall) ? event.hall.join(' & ') : event?.hall || 'TBA';
-
-        return {
-            title: event?.name || "Event Information",
-            description: `${event?.name || "Event"} - ${eventDate} at ${hall}. Thaal count: ${event?.thaalCount || 'TBA'}. View full event details and requirements.`,
-            openGraph: {
-                title: event?.name || "Event Information",
-                description: `Join us on ${eventDate} at ${hall}`,
-            },
-        };
-    } catch (error) {
-        return { title: "Event Information", description: "Public view of event details and inventory requirements." };
-    }
-}
-
 "use client";
 
 import { useEffect, useState } from "react";

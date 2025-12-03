@@ -1,9 +1,3 @@
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-    title: "System Configuration",
-    description: "Configure system settings, manage master data, export/restore data, and perform administrative tasks.",
-};
 
 "use client";
 

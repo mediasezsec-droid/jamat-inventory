@@ -1,9 +1,3 @@
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-    title: "System Setup",
-    description: "Initialize your Jamaat Inventory System. Create the first admin account to get started.",
-};
 
 "use client";
 

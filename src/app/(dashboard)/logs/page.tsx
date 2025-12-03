@@ -1,9 +1,3 @@
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-    title: "System Logs",
-    description: "Real-time system activity logs. Monitor user actions, inventory changes, and system events with comprehensive audit trail.",
-};
 
 "use client";
 

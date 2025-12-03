@@ -1,9 +1,3 @@
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-    title: "Login",
-    description: "Sign in to access the Jamaat Inventory Management System. Secure credential-based authentication for managing events and inventory.",
-};
 
 "use client";
 

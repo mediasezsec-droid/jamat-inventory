@@ -1,32 +1,3 @@
-import type { Metadata } from "next";
-import { db } from "@/lib/firebase";
-
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-    const { id } = await params;
-    try {
-        const eventDoc = await db.collection("events").doc(id).get();
-
-        if (!eventDoc.exists) {
-            return {
-                title: "Event Not Found",
-                description: "The requested event could not be found.",
-            };
-        }
-
-        const event = eventDoc.data();
-
-        return {
-            title: `Edit ${event?.name || "Event"}`,
-            description: `Edit event details and update configuration for ${event?.name || "this event"}.`,
-        };
-    } catch (error) {
-        return {
-            title: "Edit Event",
-            description: "Edit event details and update configuration.",
-        };
-    }
-}
-
 "use client";
 
 import { useEffect, useState } from "react";
