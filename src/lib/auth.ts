@@ -42,6 +42,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             id: userDoc.id,
             email: userData.email,
             name: userData.name || userData.username,
+            username: userData.username,
             role: userData.role,
             profileStatus: userData.profileStatus,
             mobile: userData.mobile,
@@ -54,15 +55,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks,
     async signIn({ user, account }) {
       if (account?.provider === "credentials" && user) {
-        // Log successful login
         try {
           const { logAction } = await import("@/lib/logger");
           await logAction(
             "USER_LOGIN",
             { loginMethod: "credentials" },
-            { id: user.id as string, name: user.name || "Unknown" }
+            { id: user.id as string, name: user.name || "Unknown" },
           );
         } catch (error) {
           console.error("Failed to log login action:", error);
@@ -71,49 +72,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return true;
     },
-    async jwt({ token, user, trigger, session }) {
-      if (user) {
-        token.role = (user as any).role;
-        token.id = user.id;
-        token.profileStatus = (user as any).profileStatus;
-        token.mobile = (user as any).mobile;
-      }
-
-      // Self-heal: If profileStatus is missing (e.g. old session), fetch it from DB
-      if (!token.profileStatus && token.id) {
-        try {
-          const userDoc = await db
-            .collection("users")
-            .doc(token.id as string)
-            .get();
-          if (userDoc.exists) {
-            const userData = userDoc.data() as User;
-            token.profileStatus = userData.profileStatus;
-            token.mobile = userData.mobile; // Also fetch mobile if missing
-          }
-        } catch (error) {
-          console.error(
-            "Failed to fetch user profile status in JWT callback",
-            error
-          );
-        }
-      }
-
-      if (trigger === "update" && session) {
-        token = { ...token, ...session };
-      }
-
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        (session.user as any).role = token.role;
-        (session.user as any).id = token.id;
-        (session.user as any).profileStatus = token.profileStatus;
-        (session.user as any).mobile = token.mobile;
-      }
-      return session;
-    },
-    ...authConfig.callbacks, // Keep authorized callback
   },
 });

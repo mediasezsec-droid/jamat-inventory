@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InventoryItem } from "@/types";
 import { Package, AlertTriangle, XCircle, Layers } from "lucide-react";
 
@@ -9,51 +8,58 @@ interface InventoryStatsProps {
 export function InventoryStats({ items }: InventoryStatsProps) {
     const totalProducts = items.length;
     const outOfStock = items.filter((i) => i.availableQuantity === 0).length;
-    const lowStock = items.filter((i) => i.availableQuantity > 0 && i.availableQuantity < 20).length; // Threshold: 20
+    const lowStock = items.filter((i) => i.availableQuantity > 0 && i.availableQuantity < 20).length;
     const categories = new Set(items.map((i) => i.category)).size;
 
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{totalProducts}</div>
-                    <p className="text-xs text-muted-foreground">Across {categories} categories</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Low Stock</CardTitle>
-                    <AlertTriangle className="h-4 w-4 text-amber-500" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{lowStock}</div>
-                    <p className="text-xs text-muted-foreground">Items below 20 units</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
-                    <XCircle className="h-4 w-4 text-red-500" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{outOfStock}</div>
-                    <p className="text-xs text-muted-foreground">Needs reordering</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Categories</CardTitle>
-                    <Layers className="h-4 w-4 text-blue-500" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{categories}</div>
-                    <p className="text-xs text-muted-foreground">Active categories</p>
-                </CardContent>
-            </Card>
+            {/* Total Products - Indigo */}
+            <div className="stat-card stat-card-indigo">
+                <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-medium text-slate-600">Total Products</p>
+                    <div className="icon-container-indigo">
+                        <Package className="w-5 h-5" />
+                    </div>
+                </div>
+                <p className="text-3xl font-bold text-slate-900">{totalProducts}</p>
+                <p className="text-xs text-slate-400 mt-1">Across {categories} categories</p>
+            </div>
+
+            {/* Low Stock - Amber */}
+            <div className="stat-card stat-card-amber">
+                <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-medium text-slate-600">Low Stock</p>
+                    <div className="icon-container-amber">
+                        <AlertTriangle className="w-5 h-5" />
+                    </div>
+                </div>
+                <p className="text-3xl font-bold text-slate-900">{lowStock}</p>
+                <p className="text-xs text-slate-400 mt-1">Items below 20 units</p>
+            </div>
+
+            {/* Out of Stock - Rose */}
+            <div className="stat-card stat-card-rose">
+                <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-medium text-slate-600">Out of Stock</p>
+                    <div className="icon-container-rose">
+                        <XCircle className="w-5 h-5" />
+                    </div>
+                </div>
+                <p className="text-3xl font-bold text-slate-900">{outOfStock}</p>
+                <p className="text-xs text-slate-400 mt-1">Needs reordering</p>
+            </div>
+
+            {/* Categories - Emerald */}
+            <div className="stat-card stat-card-emerald">
+                <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-medium text-slate-600">Categories</p>
+                    <div className="icon-container-emerald">
+                        <Layers className="w-5 h-5" />
+                    </div>
+                </div>
+                <p className="text-3xl font-bold text-slate-900">{categories}</p>
+                <p className="text-xs text-slate-400 mt-1">Active categories</p>
+            </div>
         </div>
     );
 }

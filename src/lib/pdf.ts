@@ -212,7 +212,7 @@ export const eventPdfTemplate = (event: any) => {
             <table style="border-collapse: collapse; flex: 2; font-size: 11px;">
                 <tr>
                     <td style="border: 1px solid #333; padding: 6px 10px; width: 100px;">₹ Per Thaal</td>
-                    <td style="border: 1px solid #333; padding: 6px 10px; width: 50px; text-align: center;">${event.thaalCount || ""}</td>
+                    <td style="border: 1px solid #333; padding: 6px 10px; width: 50px; text-align: center;">${event.thaalCount > 0 ? event.thaalCount : ""}</td>
                     <td style="border: 1px solid #333; padding: 6px 10px; width: 80px;"></td>
                     
                     ${/* Dynamic Hall 1 */ ""}
@@ -223,7 +223,7 @@ export const eventPdfTemplate = (event: any) => {
                 </tr>
                 <tr>
                     <td style="border: 1px solid #333; padding: 6px 10px;">₹ Sarkari</td>
-                    <td style="border: 1px solid #333; padding: 6px 10px; text-align: center;">${event.sarkariThaalSet || ""}</td>
+                    <td style="border: 1px solid #333; padding: 6px 10px; text-align: center;">${event.sarkariThaalSet > 0 ? event.sarkariThaalSet : ""}</td>
                     <td style="border: 1px solid #333; padding: 6px 10px;"></td>
 
                     ${/* Dynamic Hall 2 */ ""}

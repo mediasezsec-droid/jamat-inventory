@@ -11,8 +11,11 @@ import {
     ClipboardList,
     Settings,
     LogOut,
+    CalendarDays,
+    Users,
+    UserCircle,
     Menu,
-    User as UserIcon,
+    AlertCircle
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
@@ -22,96 +25,195 @@ const routes = [
         label: "Dashboard",
         icon: LayoutDashboard,
         href: "/",
-        color: "text-sky-500",
     },
     {
-        label: "All Events",
-        icon: CalendarPlus, // Or Calendar
+        label: "Events",
+        icon: CalendarDays,
         href: "/events",
-        color: "text-violet-500",
     },
     {
         label: "New Event",
         icon: CalendarPlus,
         href: "/events/new",
-        color: "text-violet-500",
     },
     {
         label: "Inventory",
         icon: Package,
         href: "/inventory",
-        color: "text-pink-700",
-    },
-    {
-        label: "Users",
-        icon: Settings, // Or Users icon
-        href: "/settings/users",
-        color: "text-cyan-500",
     },
     {
         label: "Ledger",
         icon: ClipboardList,
         href: "/ledger",
-        color: "text-emerald-500",
     },
     {
         label: "System Logs",
         icon: ClipboardList,
         href: "/logs",
-        color: "text-orange-700",
+    },
+    {
+        label: "Lost Items",
+        icon: AlertCircle,
+        href: "/lost-items",
     },
     {
         label: "Settings",
         icon: Settings,
         href: "/settings",
-        color: "text-gray-500",
     },
     {
         label: "My Profile",
-        icon: UserIcon,
+        icon: UserCircle,
         href: "/profile",
-        color: "text-indigo-500",
+    },
+    {
+        label: "Users",
+        icon: Users,
+        href: "/users",
     },
 ];
 
-export function Sidebar() {
+import { Role } from "@/types";
+
+interface SidebarProps {
+    role?: Role;
+}
+
+export function Sidebar({ role }: SidebarProps) {
     const pathname = usePathname();
 
+    // Strict role checks
+    const isAdmin = role === "ADMIN";
+    const isManager = role === "MANAGER";
+    const isStaff = role === "STAFF";
+    const isWatcher = role === "WATCHER";
+
+    // RBAC:
+    // ADMIN: Can do everything
+    // MANAGER: Can view and create events, view logs
+    // STAFF: Can only edit inventory
+    // WATCHER: Can view inventory and events (no edit)
+
+    const routes = [
+        {
+            label: "Dashboard",
+            icon: LayoutDashboard,
+            href: "/",
+            roles: ["ADMIN", "MANAGER", "STAFF", "WATCHER"], // Everyone
+        },
+        {
+            label: "Events",
+            icon: CalendarDays,
+            href: "/events",
+            roles: ["ADMIN", "MANAGER", "WATCHER"], // View events
+        },
+        {
+            label: "New Event",
+            icon: CalendarPlus,
+            href: "/events/new",
+            roles: ["ADMIN", "MANAGER"], // Create events
+        },
+        {
+            label: "Inventory",
+            icon: Package,
+            href: "/inventory",
+            roles: ["ADMIN", "MANAGER", "STAFF", "WATCHER"], // Everyone (edit restricted in page)
+        },
+        {
+            label: "Ledger",
+            icon: ClipboardList,
+            href: "/ledger",
+            roles: ["ADMIN", "MANAGER"], // Financial data
+        },
+        {
+            label: "System Logs",
+            icon: ClipboardList,
+            href: "/logs",
+            roles: ["ADMIN", "MANAGER"],
+        },
+        {
+            label: "Lost Items",
+            icon: AlertCircle,
+            href: "/lost-items",
+            roles: ["ADMIN", "MANAGER", "STAFF"],
+        },
+        {
+            label: "Settings",
+            icon: Settings,
+            href: "/settings",
+            roles: ["ADMIN"],
+        },
+        {
+            label: "My Profile",
+            icon: UserCircle,
+            href: "/profile",
+            roles: ["ADMIN", "MANAGER", "STAFF", "WATCHER"], // Everyone
+        },
+        {
+            label: "Users",
+            icon: Users,
+            href: "/users",
+            roles: ["ADMIN"],
+        },
+    ];
+
+    const filteredRoutes = routes.filter(route => {
+        if (!role) return false; // No role = no access
+        return route.roles.includes(role);
+    });
+
     return (
-        <div className="space-y-4 py-4 flex flex-col h-full bg-white border-r border-slate-200 text-slate-900">
-            <div className="px-3 py-2 flex-1">
-                <Link href="/" className="flex items-center pl-3 mb-14">
-                    <div className="relative w-8 h-8 mr-4">
-                        <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center font-bold text-white shadow-md">
-                            J
-                        </div>
+        <div className="flex flex-col h-full bg-gradient-to-b from-white to-slate-50 border-r border-slate-200 w-full">
+            {/* Logo Section - with gradient accent */}
+            <div className="h-20 flex items-center px-6 border-b border-slate-100 relative overflow-hidden">
+                {/* Subtle gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-violet-500/5" />
+                <Link href="/" className="flex items-center gap-3 relative z-10">
+                    <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-indigo-200">
+                        J
                     </div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                        Jamaat Inv
-                    </h1>
+                    <div className="flex flex-col">
+                        <span className="font-bold text-lg tracking-tight text-slate-900 leading-none">Jamaat Inv</span>
+                        <span className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider mt-1">
+                            {isAdmin ? "Admin" : isManager ? "Manager" : isStaff ? "Staff" : "Watcher"}
+                        </span>
+                    </div>
                 </Link>
-                <div className="space-y-1">
-                    {routes.map((route) => (
+            </div>
+
+            {/* Navigation */}
+            <div className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
+                {filteredRoutes.map((route) => {
+                    const isActive = pathname === route.href;
+                    return (
                         <Link
                             key={route.href}
                             href={route.href}
                             className={cn(
-                                "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:bg-slate-100 rounded-lg transition duration-200",
-                                pathname === route.href ? "bg-amber-50 text-amber-700" : "text-slate-600"
+                                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group font-medium",
+                                isActive
+                                    ? "bg-indigo-50 text-indigo-700 shadow-sm"
+                                    : "text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50"
                             )}
                         >
-                            <div className="flex items-center flex-1">
-                                <route.icon className={cn("h-5 w-5 mr-3 transition-colors", pathname === route.href ? "text-amber-600" : "text-slate-400 group-hover:text-slate-600")} />
-                                {route.label}
-                            </div>
+                            <route.icon className={cn(
+                                "h-4 w-4 transition-colors",
+                                isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-indigo-500"
+                            )} />
+                            {route.label}
+                            {isActive && (
+                                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                            )}
                         </Link>
-                    ))}
-                </div>
+                    )
+                })}
             </div>
-            <div className="px-3 py-2">
+
+            {/* User / Footer */}
+            <div className="p-4 border-t border-slate-100">
                 <Button
                     variant="ghost"
-                    className="w-full justify-start text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                    className="w-full justify-start gap-3 text-slate-500 hover:text-red-600 hover:bg-slate-50 px-3 h-9 rounded-md text-sm font-medium"
                     onClick={async () => {
                         try {
                             await fetch("/api/auth/logout", { method: "POST" });
@@ -121,7 +223,7 @@ export function Sidebar() {
                         }
                     }}
                 >
-                    <LogOut className="h-5 w-5 mr-3" />
+                    <LogOut className="h-4 w-4" />
                     Logout
                 </Button>
             </div>
@@ -129,18 +231,18 @@ export function Sidebar() {
     );
 }
 
-export function MobileSidebar() {
+export function MobileSidebar({ role }: { role?: Role }) {
     const [open, setOpen] = useState(false);
 
     return (
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                    <Menu />
+                <Button variant="ghost" size="icon" className="md:hidden text-slate-600 hover:bg-slate-100 rounded-md">
+                    <Menu className="w-5 h-5" />
                 </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 bg-white border-r border-slate-200 w-72">
-                <Sidebar />
+            <SheetContent side="left" className="p-0 bg-white border-r border-slate-200 w-[260px]">
+                <Sidebar role={role} />
             </SheetContent>
         </Sheet>
     )

@@ -60,6 +60,7 @@ export interface Event {
   createdAt: string;
   updatedAt?: string;
   createdBy?: string; // User UID
+  status?: "BOOKED" | "CANCELLED" | "COMPLETED";
 }
 
 export interface InventoryLog {

@@ -34,9 +34,11 @@ import { toast } from "sonner";
 import { Event } from "@/types";
 
 // Schema (Same as New Event)
+// Schema (Same as New Event)
 const formSchema = z.object({
     mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
     name: z.string().min(2, "Name is required"),
+    email: z.string().email("Invalid email").optional().or(z.literal("")),
     occasionDate: z.date(),
     occasionTime: z.string().min(1, "Time is required"),
     description: z.string().min(1, "Description is required"),
@@ -57,6 +59,12 @@ const formSchema = z.object({
     paat: z.boolean().default(false),
     masjidLight: z.boolean().default(false),
     menu: z.string().default(""),
+
+    // Add-ons
+    acStartTime: z.string().optional(),
+    partyTime: z.string().optional(),
+    decorations: z.boolean().default(false),
+    gasCount: z.coerce.number().min(0).default(0),
 });
 
 export default function EditEventPage() {
@@ -71,6 +79,7 @@ export default function EditEventPage() {
         defaultValues: {
             mobile: "",
             name: "",
+            email: "",
             occasionDate: new Date(),
             occasionTime: "",
             description: "",
@@ -89,6 +98,10 @@ export default function EditEventPage() {
             paat: false,
             masjidLight: false,
             menu: "",
+            acStartTime: "",
+            partyTime: "",
+            decorations: false,
+            gasCount: 0,
         },
     });
 
@@ -102,6 +115,7 @@ export default function EditEventPage() {
                 form.reset({
                     mobile: event.mobile,
                     name: event.name,
+                    email: event.email || "",
                     occasionDate: new Date(event.occasionDate),
                     occasionTime: event.occasionTime,
                     description: event.description,
@@ -120,6 +134,10 @@ export default function EditEventPage() {
                     paat: event.paat,
                     masjidLight: event.masjidLight,
                     menu: event.menu,
+                    acStartTime: event.acStartTime || "",
+                    partyTime: event.partyTime || "",
+                    decorations: event.decorations || false,
+                    gasCount: event.gasCount || 0,
                 });
             } catch (error) {
                 toast.error("Failed to load event");
@@ -171,6 +189,9 @@ export default function EditEventPage() {
                             <FormField control={form.control} name="name" render={({ field }) => (
                                 <FormItem><FormLabel>Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
+                            <FormField control={form.control} name="email" render={({ field }) => (
+                                <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} placeholder="Optional" /></FormControl><FormMessage /></FormItem>
+                            )} />
                             <FormField control={form.control} name="occasionDate" render={({ field }) => (
                                 <FormItem className="flex flex-col"><FormLabel>Date</FormLabel>
                                     <Popover>
@@ -195,14 +216,43 @@ export default function EditEventPage() {
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                                 <FormField control={form.control} name="thaalCount" render={({ field }) => (<FormItem><FormLabel>Thaal Count</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
                                 <FormField control={form.control} name="sarkariThaalSet" render={({ field }) => (<FormItem><FormLabel>Sarkari Sets</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
+                                <FormField control={form.control} name="extraChilamchiLota" render={({ field }) => (<FormItem><FormLabel>Ex. Chilamchi</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
                                 <FormField control={form.control} name="tablesAndChairs" render={({ field }) => (<FormItem><FormLabel>Tables/Chairs</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6">
-                                <FormField control={form.control} name="mic" render={({ field }) => (<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel>Mic</FormLabel></FormItem>)} />
-                                <FormField control={form.control} name="crockeryRequired" render={({ field }) => (<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel>Crockery</FormLabel></FormItem>)} />
+                                <FormField control={form.control} name="mic" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel>Mic</FormLabel></FormItem>)} />
+                                <FormField control={form.control} name="crockeryRequired" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel>Crockery</FormLabel></FormItem>)} />
+                                <FormField control={form.control} name="bhaiSaabIzzan" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel>Bhai Saab Izzan</FormLabel></FormItem>)} />
+                                <FormField control={form.control} name="benSaabIzzan" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel>Ben Saab Izzan</FormLabel></FormItem>)} />
+                                <FormField control={form.control} name="thaalForDevri" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel>Thaal For Devri</FormLabel></FormItem>)} />
+                                <FormField control={form.control} name="paat" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel>PAAT</FormLabel></FormItem>)} />
+                                <FormField control={form.control} name="masjidLight" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel>Masjid Light</FormLabel></FormItem>)} />
                             </div>
                             <div className="mt-6">
                                 <FormField control={form.control} name="menu" render={({ field }) => (<FormItem><FormLabel>Menu</FormLabel><FormControl><Textarea {...field} /></FormControl></FormItem>)} />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Add-ons */}
+                    <Card className="border-t-4 border-t-purple-500 shadow-lg">
+                        <CardHeader className="bg-slate-50"><CardTitle>Facilities & Add-ons</CardTitle></CardHeader>
+                        <CardContent className="p-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <FormField control={form.control} name="acStartTime" render={({ field }) => (
+                                    <FormItem><FormLabel>AC Start Time</FormLabel><FormControl><Input type="time" {...field} /></FormControl><FormMessage /></FormItem>
+                                )} />
+                                <FormField control={form.control} name="partyTime" render={({ field }) => (
+                                    <FormItem><FormLabel>Party Time</FormLabel><FormControl><Input type="time" {...field} /></FormControl><FormMessage /></FormItem>
+                                )} />
+                                <FormField control={form.control} name="gasCount" render={({ field }) => (
+                                    <FormItem><FormLabel>Gas Count</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                                )} />
+                            </div>
+                            <div className="mt-6">
+                                <FormField control={form.control} name="decorations" render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel>Decorations Required</FormLabel></FormItem>
+                                )} />
                             </div>
                         </CardContent>
                     </Card>

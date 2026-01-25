@@ -37,8 +37,8 @@ export default function EventPrintPage() {
         <div className="min-h-screen bg-gray-50 p-8 print:p-0 print:bg-white">
             <style type="text/css" media="print">
                 {`
-                    @page { size: A4; margin: 5mm; }
-                    body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    @page { size: A4; margin: 3mm; }
+                    body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; font-size: 11px; }
                     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                 `}
             </style>
@@ -54,20 +54,20 @@ export default function EventPrintPage() {
             {/* Print Container */}
             <div className="max-w-4xl mx-auto bg-white shadow-xl print:shadow-none print:w-full border print:border-none rounded-xl overflow-hidden">
 
-                {/* Header - Compact & Removed Bismillah */}
-                <div className="bg-slate-900 text-white p-6 text-center print:bg-slate-900 print:text-white print:p-4">
-                    <h1 className="text-3xl font-bold uppercase tracking-wide font-serif mb-1 print:text-2xl print:mb-0">Anjuman-e-Mohammedi</h1>
-                    <p className="text-sm opacity-80 uppercase tracking-wider print:text-xs">Secunderabad</p>
+                {/* Header - Compact */}
+                <div className="bg-slate-900 text-white p-4 text-center print:bg-slate-900 print:text-white print:p-2">
+                    <h1 className="text-2xl font-bold uppercase tracking-wide font-serif print:text-xl">Anjuman-e-Mohammedi</h1>
+                    <p className="text-xs opacity-80 uppercase tracking-wider">Secunderabad</p>
                 </div>
 
                 {/* Document Title */}
-                <div className="bg-amber-50 border-b border-amber-100 p-3 text-center print:bg-amber-50 print:border-amber-100 print:p-2">
-                    <h2 className="text-xl font-bold text-amber-900 uppercase tracking-widest print:text-lg">Miqaat Booking Form</h2>
+                <div className="bg-amber-50 border-b border-amber-100 p-2 text-center print:bg-amber-50 print:border-amber-100 print:p-1">
+                    <h2 className="text-lg font-bold text-amber-900 uppercase tracking-widest print:text-base">Miqaat Booking Form</h2>
                 </div>
 
-                <div className="p-8 print:p-4">
+                <div className="p-4 print:p-2">
                     {/* Section 1: Booker & Event Info */}
-                    <div className="grid grid-cols-2 gap-8 mb-8 print:gap-4 print:mb-4">
+                    <div className="grid grid-cols-2 gap-4 mb-4 print:gap-2 print:mb-2">
                         <div className="space-y-4 print:space-y-2">
                             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1 mb-2 flex items-center print:mb-1">
                                 <User className="w-4 h-4 mr-2" /> Booker Details
@@ -233,9 +233,9 @@ export default function EventPrintPage() {
                                         {(() => {
                                             const halls = Array.isArray(event.hall) ? event.hall : [event.hall];
                                             const leftItems = [
-                                                { label: "₹ Per Thaal", value: event.thaalCount },
-                                                { label: "₹ Sarkari", value: event.sarkariThaalSet },
-                                                { label: "₹ GAS", value: event.gasCount ? event.gasCount : "" }, // Show value if present
+                                                { label: "₹ Per Thaal", value: "" },
+                                                { label: "₹ Sarkari", value: "" },
+                                                { label: "₹ GAS", value: "" },
                                                 { label: "Kitchen :-", value: "" },
                                                 { label: "Decoration :-", value: event.decorations ? "Yes" : "No" },
                                                 { label: "Others :-", value: "" },
@@ -251,7 +251,7 @@ export default function EventPrintPage() {
                                                 rows.push(
                                                     <tr key={i}>
                                                         <td className="border border-slate-300 p-2 font-medium whitespace-nowrap w-[15%]">{left.label}</td>
-                                                        <td className="border border-slate-300 p-2 text-center w-[15%] font-mono">{left.value}</td>
+                                                        <td className="border border-slate-300 p-2 text-center w-[15%] font-mono"></td>
                                                         <td className="border border-slate-300 p-2 w-[15%]"></td>
                                                         <td className="border border-slate-300 p-2 whitespace-nowrap w-[25%]">{hall}</td>
                                                         <td className="border border-slate-300 p-2 w-[30%]"></td>
@@ -283,20 +283,20 @@ export default function EventPrintPage() {
                     </div>
 
                     {/* Footer / Signatures */}
-                    <div className="mt-16 pt-8 border-t-2 border-slate-200 print:mt-8 print:pt-4">
-                        <div className="grid grid-cols-2 gap-16 print:gap-8">
+                    <div className="mt-6 pt-4 border-t-2 border-slate-200 print:mt-4 print:pt-2">
+                        <div className="grid grid-cols-2 gap-8 print:gap-4">
                             <div className="text-center">
-                                <div className="h-16 border-b border-slate-300 mb-2 print:h-12"></div>
-                                <p className="text-sm font-bold uppercase text-slate-500 print:text-xs">Booker Signature</p>
+                                <div className="h-10 border-b border-slate-300 mb-1 print:h-8"></div>
+                                <p className="text-xs font-bold uppercase text-slate-500">Booker Signature</p>
                             </div>
                             <div className="text-center">
-                                <div className="h-16 border-b border-slate-300 mb-2 print:h-12"></div>
-                                <p className="text-sm font-bold uppercase text-slate-500 print:text-xs">Office Signature</p>
+                                <div className="h-10 border-b border-slate-300 mb-1 print:h-8"></div>
+                                <p className="text-xs font-bold uppercase text-slate-500">Office Signature</p>
                             </div>
                         </div>
-                        <div className="mt-8 text-center text-xs text-slate-400 print:text-black print:mt-4">
+                        <div className="mt-3 text-center text-[10px] text-slate-400 print:text-black print:mt-2">
                             <p>Generated by Jamaat Inventory System on {format(new Date(), "PPP 'at' p")}</p>
-                            <p className="mt-1">This is a computer-generated document.</p>
+                            <p>This is a computer-generated document.</p>
                         </div>
                     </div>
 

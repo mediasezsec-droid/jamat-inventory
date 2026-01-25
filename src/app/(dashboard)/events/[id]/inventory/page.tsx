@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { format, subHours, addHours } from "date-fns";
-import { Loader2, AlertTriangle, Package, History, Plus, Minus, AlertCircle } from "lucide-react";
+import { Loader2, AlertTriangle, Package, History, Plus, Minus, AlertCircle, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/ui/page-header";
 import { Protect, useRole } from "@/components/auth/rbac";
 import { InventoryItem, Event } from "@/types";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function EventInventoryPage() {
     const params = useParams();
@@ -23,58 +24,46 @@ export default function EventInventoryPage() {
     const [inventory, setInventory] = useState<InventoryItem[]>([]);
     const [logs, setLogs] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isAllowed, setIsAllowed] = useState(false);
     const [activeTab, setActiveTab] = useState("inventory");
+    const [searchTerm, setSearchTerm] = useState("");
+
+    // State to hold input values for all items: { [itemId]: quantity_string }
+    const [inputValues, setInputValues] = useState<Record<string, string>>({});
 
     // Fetch Data
     const fetchData = async () => {
         try {
-            // Fetch Event
-            const eventRes = await fetch(`/api/events/${eventId}`);
+            const [eventRes, invRes, logsRes] = await Promise.all([
+                fetch(`/api/events/${eventId}`),
+                fetch("/api/inventory"),
+                fetch(`/api/events/${eventId}/logs`)
+            ]);
+
             if (!eventRes.ok) throw new Error("Event not found");
             const eventData = await eventRes.json();
             setEvent(eventData);
 
-            // Check time constraints
-            const eventDate = new Date(eventData.occasionDate);
-            const now = new Date();
-            const dayStart = new Date(eventDate); dayStart.setHours(0, 0, 0, 0);
-            const dayEnd = new Date(eventDate); dayEnd.setHours(23, 59, 59, 999);
-            const allowedStart = subHours(dayStart, 3);
-            const allowedEnd = addHours(dayEnd, 3);
-            setIsAllowed(now >= allowedStart && now <= allowedEnd);
-
-            // Fetch Inventory
-            const invRes = await fetch("/api/inventory");
             const invData = await invRes.json();
             setInventory(invData);
 
+            if (logsRes.ok) {
+                const logsData = await logsRes.json();
+                setLogs(logsData);
+            }
+
         } catch (error) {
             console.error(error);
-            toast.error("Failed to load data");
+            // toast.error("Failed to load data");
         } finally {
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchData();
-
-        // Polling for logs (every 3 seconds)
-        const fetchLogs = async () => {
-            try {
-                const logsRes = await fetch(`/api/events/${eventId}/logs`);
-                if (logsRes.ok) {
-                    const logsData = await logsRes.json();
-                    setLogs(logsData);
-                }
-            } catch (error) {
-                console.error("Failed to fetch logs", error);
-            }
-        };
-
-        fetchLogs();
-        const interval = setInterval(fetchLogs, 3000);
+        fetchData(); // Initial fetch
+        const interval = setInterval(() => {
+            fetchData(); // Poll everything (Inventory + Logs)
+        }, 3000);
 
         return () => clearInterval(interval);
     }, [eventId]);
@@ -92,193 +81,322 @@ export default function EventInventoryPage() {
                 const data = await res.json();
                 throw new Error(data.error || "Failed to update");
             }
-
-            toast.success(`${action} successful`);
-            // No need to fetch logs manually, RTDB listener will update
+            return true;
         } catch (error: any) {
-            toast.error(error.message);
+            console.error(error);
+            // toast.error(error.message);
+            return false;
         }
     };
 
-    const getItemStats = (itemId: string) => {
-        const itemLogs = logs.filter(log => (log.details?.itemId === itemId) || (log.itemId === itemId));
+    const handleBulkAction = async (action: "ISSUE" | "RETURN") => {
+        const updates: Promise<any>[] = [];
+        const itemsToUpdate: string[] = [];
 
-        let issued = 0;
-        let returned = 0;
-        let lost = 0;
-
-        itemLogs.forEach(log => {
-            const qty = log.details?.quantity || log.quantity || 0;
-            if (log.action === "ISSUE" || log.action === "INVENTORY_REMOVED") {
-                issued += qty;
-            } else if (log.action === "RETURN" || log.action === "INVENTORY_RETURNED") {
-                returned += qty;
-            } else if (log.action === "LOSS" || log.action === "INVENTORY_LOSS") {
-                lost += qty;
+        Object.entries(inputValues).forEach(([itemId, qtyStr]) => {
+            const qty = parseInt(qtyStr);
+            if (qty > 0) {
+                itemsToUpdate.push(itemId);
+                updates.push(handleUpdate(itemId, action, qty));
             }
         });
 
-        const deficit = issued - returned - lost;
-        return { issued, returned, lost, deficit };
+        if (updates.length === 0) {
+            toast.info("No quantity entered for any item.");
+            return;
+        }
+
+        toast.promise(Promise.all(updates), {
+            loading: `Processing ${action === "ISSUE" ? "Dispatch" : "Return"} for ${updates.length} items...`,
+            success: () => {
+                fetchData();
+                // Clear inputs for successful items or all? Clear all for simplicity
+                setInputValues({});
+                return `Successfully ${action === "ISSUE" ? "Dispatched" : "Returned"} items.`;
+            },
+            error: "Some updates failed. Check logs."
+        });
     };
 
-    if (isLoading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-amber-600" /></div>;
+    const handleSingleAction = async (itemId: string, action: "ISSUE" | "RETURN" | "LOSS", quantity: number) => {
+        const success = await handleUpdate(itemId, action, quantity);
+        if (success) {
+            toast.success(`${action} successful`);
+            fetchData();
+            // Clear specific input if it was an issue/return
+            if (action !== "LOSS") {
+                setInputValues(prev => ({ ...prev, [itemId]: "" }));
+            }
+        } else {
+            toast.error("Failed to update");
+        }
+    }
+
+
+    const getItemStats = (itemId: string) => {
+        const itemLogs = logs.filter(log => (log.details?.itemId === itemId) || (log.itemId === itemId));
+        let issued = 0, returned = 0, lost = 0;
+        itemLogs.forEach(log => {
+            const qty = log.details?.quantity || log.quantity || 0;
+            if (log.action.includes("ISSUE") || log.action.includes("REMOVED")) issued += qty;
+            else if (log.action.includes("RETURN") || log.action.includes("RETURNED")) returned += qty;
+            else if (log.action.includes("LOSS") || log.action.includes("LOSS")) lost += qty;
+        });
+        return { issued, returned, lost, deficit: issued - returned - lost };
+    };
+
+    // Filter items
+    const filteredInventory = inventory.filter(item =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (isLoading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin text-indigo-600 w-8 h-8" /></div>;
     if (!event) return <div className="p-10 text-center">Event not found</div>;
 
-    return (
-        <div className="container mx-auto p-4 max-w-5xl space-y-6 pb-24">
-            <PageHeader
-                title="Event Inventory"
-                description={`${event.name} - ${format(new Date(event.occasionDate), "PPP")}`}
-                actions={
-                    <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => window.print()}>Print Checklist</Button>
-                    </div>
-                }
-            />
+    const isCancelled = event.status === "CANCELLED";
 
-            {!isAllowed && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3 text-red-800 mb-6">
-                    <AlertTriangle className="h-5 w-5 mt-0.5" />
-                    <div>
-                        <h3 className="font-semibold">Read-Only Mode</h3>
-                        <p className="text-sm opacity-90">Inventory management is only allowed on the day of the event (with 3hr buffer).</p>
-                    </div>
+    return (
+        <div className="container mx-auto p-4 max-w-7xl pb-24 space-y-8">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Inventory Control</h1>
+                    <p className="text-slate-500 flex items-center gap-2 mt-1">
+                        <span className="font-semibold">{event.name}</span>
+                        <span>•</span>
+                        <span>{format(new Date(event.occasionDate), "PPP")}</span>
+                    </p>
+                </div>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => window.print()}>Print Checklist</Button>
+                </div>
+            </div>
+
+            {isCancelled && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 text-red-700">
+                    <AlertTriangle className="h-5 w-5" />
+                    <span className="font-medium">Event is Cancelled. You can still manage inventory for reconciliation.</span>
                 </div>
             )}
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="inventory" className="flex items-center gap-2">
-                        <Package className="h-4 w-4" /> Inventory
-                    </TabsTrigger>
-                    <TabsTrigger value="logs" className="flex items-center gap-2">
-                        <History className="h-4 w-4" /> Logs
-                    </TabsTrigger>
-                </TabsList>
+            <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm sticky top-4 z-40 flex-wrap">
+                <div className="relative flex-1 min-w-[200px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                        placeholder="Search items..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 bg-slate-50 border-slate-200"
+                    />
+                </div>
 
-                <TabsContent value="inventory" className="space-y-4">
-                    {inventory.map(item => {
-                        const stats = getItemStats(item.id);
-                        return (
-                            <Card key={item.id} className="overflow-hidden">
-                                <CardHeader className="bg-slate-50 pb-3">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <CardTitle className="text-lg">{item.name}</CardTitle>
-                                            <p className="text-sm text-slate-500 capitalize">{item.category}</p>
-                                        </div>
-                                        <Badge variant={stats.deficit > 0 ? "destructive" : "secondary"} className="text-sm px-3 py-1">
-                                            Deficit: {stats.deficit}
-                                        </Badge>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="pt-4">
-                                    <div className="grid grid-cols-3 gap-4 text-center mb-6">
-                                        <div className="bg-slate-50 p-2 rounded">
-                                            <p className="text-xs text-slate-500 uppercase">Available</p>
-                                            <p className="text-xl font-bold text-slate-700">{item.availableQuantity}</p>
-                                        </div>
-                                        <div className="bg-amber-50 p-2 rounded">
-                                            <p className="text-xs text-amber-600 uppercase">Issued</p>
-                                            <p className="text-xl font-bold text-amber-700">{stats.issued}</p>
-                                        </div>
-                                        <div className="bg-green-50 p-2 rounded">
-                                            <p className="text-xs text-green-600 uppercase">Returned</p>
-                                            <p className="text-xl font-bold text-green-700">{stats.returned}</p>
-                                        </div>
-                                    </div>
+                <div className="w-px h-8 bg-slate-200 mx-2 hidden md:block"></div>
 
-                                    {canManageInventory && isAllowed && (
-                                        <div className="space-y-3">
-                                            <div className="flex gap-2">
-                                                <QuickAction
-                                                    label="Issue"
-                                                    variant="default"
-                                                    onAction={(qty) => handleUpdate(item.id, "ISSUE", qty)}
-                                                />
-                                                <QuickAction
-                                                    label="Return"
-                                                    variant="outline"
-                                                    onAction={(qty) => handleUpdate(item.id, "RETURN", qty)}
-                                                />
+                <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
+                    <button
+                        onClick={() => setActiveTab("inventory")}
+                        className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "inventory" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                    >
+                        Inventory List
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("logs")}
+                        className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "logs" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                    >
+                        Log History
+                    </button>
+                </div>
+            </div>
+
+            {activeTab === "inventory" ? (
+                <div className="space-y-4">
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-slate-50 hover:bg-slate-50">
+                                    <TableHead className="w-[250px] font-bold text-slate-700">Item Name</TableHead>
+                                    <TableHead className="font-bold text-slate-700 text-center">In Stock</TableHead>
+                                    <TableHead className="font-bold text-indigo-700 text-center bg-indigo-50/50">Issued</TableHead>
+                                    <TableHead className="font-bold text-emerald-700 text-center bg-emerald-50/50">Returned</TableHead>
+                                    <TableHead className="font-bold text-amber-700 text-center">Pending</TableHead>
+                                    <TableHead className="text-right font-bold text-slate-700 pr-8">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredInventory.map((item) => {
+                                    const stats = getItemStats(item.id);
+                                    const isDeficit = stats.deficit > 0;
+                                    return (
+                                        <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                                            <TableCell>
+                                                <div>
+                                                    <p className="font-medium text-slate-900">{item.name}</p>
+                                                    <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{item.category}</p>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-center font-mono text-slate-600 font-medium">{item.availableQuantity}</TableCell>
+                                            <TableCell className="text-center font-mono text-indigo-700 font-bold bg-indigo-50/30">{stats.issued}</TableCell>
+                                            <TableCell className="text-center font-mono text-emerald-700 font-bold bg-emerald-50/30">{stats.returned}</TableCell>
+                                            <TableCell className="text-center">
+                                                {isDeficit ? (
+                                                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 whitespace-nowrap">
+                                                        {stats.deficit} Pending
+                                                    </Badge>
+                                                ) : (
+                                                    <span className="text-slate-300">-</span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                {canManageInventory && (
+                                                    <div className="flex items-center justify-end gap-3">
+                                                        <QuickActionRow
+                                                            qtyValue={inputValues[item.id] || ""}
+                                                            onQtyChange={(val) => setInputValues(prev => ({ ...prev, [item.id]: val }))}
+                                                            onDispatch={(qty) => handleSingleAction(item.id, "ISSUE", qty)}
+                                                            onReturn={(qty) => handleSingleAction(item.id, "RETURN", qty)}
+                                                            deficit={stats.deficit}
+                                                            onReportLoss={(qty) => handleSingleAction(item.id, "LOSS", qty)}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    {canManageInventory && (
+                        <div className="flex justify-end gap-3 pb-8">
+                            <Button
+                                onClick={() => handleBulkAction("ISSUE")}
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200"
+                            >
+                                Issue All
+                            </Button>
+                            <Button
+                                onClick={() => handleBulkAction("RETURN")}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-200"
+                            >
+                                Return All
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <Card className="border-slate-200 shadow-sm">
+                    <CardContent className="p-0 divide-y divide-slate-100">
+                        {logs.length === 0 ? (
+                            <div className="p-12 text-center text-slate-500">No activity recorded for this event yet.</div>
+                        ) : (
+                            logs.map((log, i) => {
+                                const isIssue = log.action.includes("ISSUE") || log.action.includes("REMOVED");
+                                const isReturn = log.action.includes("RETURN");
+                                const isLoss = log.action.includes("LOSS");
+
+                                return (
+                                    <div key={i} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${isIssue ? "bg-indigo-100 text-indigo-600" :
+                                                isReturn ? "bg-emerald-100 text-emerald-600" :
+                                                    "bg-red-100 text-red-600"
+                                                }`}>
+                                                {log.action.includes("REMOVED") ? "I" : log.action[0]}
                                             </div>
-                                            {stats.deficit > 0 && (
-                                                <Button
-                                                    variant="ghost"
-                                                    className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 h-8 text-xs"
-                                                    onClick={() => {
-                                                        if (confirm(`Report ${stats.deficit} items as LOST?`)) {
-                                                            handleUpdate(item.id, "LOSS", stats.deficit);
-                                                        }
-                                                    }}
-                                                >
-                                                    Report {stats.deficit} Lost Items
-                                                </Button>
-                                            )}
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        );
-                    })}
-                </TabsContent>
-
-                <TabsContent value="logs">
-                    <Card>
-                        <CardContent className="p-0">
-                            {logs.length === 0 ? (
-                                <div className="p-8 text-center text-slate-500">No logs found for this event.</div>
-                            ) : (
-                                <div className="divide-y">
-                                    {logs.map((log, i) => (
-                                        <div key={i} className="p-4 flex justify-between items-center">
                                             <div>
-                                                <p className="font-medium text-sm">
-                                                    {log.userName}
-                                                    <span className="text-slate-500 font-normal"> {log.action.replace("INVENTORY_", "").toLowerCase()} </span>
-                                                    {log.details?.quantity || log.quantity} {log.details?.itemName || log.itemName}
+                                                <p className="text-sm font-medium text-slate-900">
+                                                    <span className="font-bold">{log.userName}</span>
+                                                    <span className="text-slate-500 font-normal mx-1">
+                                                        {isIssue ? "dispatched" :
+                                                            isReturn ? "returned" : "reported lost"}
+                                                    </span>
+                                                    <span className="font-bold text-slate-900">
+                                                        {log.details?.quantity || log.quantity} {log.details?.itemName || log.itemName}
+                                                    </span>
                                                 </p>
-                                                <p className="text-xs text-slate-400">{format(new Date(log.timestamp), "PP p")}</p>
+                                                <p className="text-xs text-slate-400 mt-0.5">{format(new Date(log.timestamp), "PP p")}</p>
                                             </div>
-                                            <Badge variant="outline" className="text-xs">{log.action.replace("INVENTORY_", "")}</Badge>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
+                                        <Badge variant="outline" className="text-[10px] text-slate-400">{log.action}</Badge>
+                                    </div>
+                                )
+                            })
+                        )}
+                    </CardContent>
+                </Card>
+            )}
         </div>
     );
 }
 
-function QuickAction({ label, variant, onAction }: { label: string, variant: "default" | "outline", onAction: (qty: number) => void }) {
-    const [qty, setQty] = useState("");
+interface QuickActionRowProps {
+    qtyValue: string;
+    onQtyChange: (val: string) => void;
+    onDispatch: (q: number) => void;
+    onReturn: (q: number) => void;
+    deficit: number;
+    onReportLoss: (q: number) => void;
+}
+
+function QuickActionRow({ qtyValue, onQtyChange, onDispatch, onReturn, deficit, onReportLoss }: QuickActionRowProps) {
+
+    const handleAction = (type: "dispatch" | "return") => {
+        const val = parseInt(qtyValue);
+        if (!val || val <= 0) return;
+
+        if (type === "dispatch") onDispatch(val);
+        else onReturn(val);
+    };
 
     return (
-        <div className="flex-1 flex gap-1">
-            <Input
-                type="number"
-                placeholder="Qty"
-                className="w-16 text-center"
-                value={qty}
-                onChange={(e) => setQty(e.target.value)}
-            />
-            <Button
-                variant={variant}
-                className="flex-1"
-                onClick={() => {
-                    const val = parseInt(qty);
-                    if (val > 0) {
-                        onAction(val);
-                        setQty("");
-                    }
-                }}
-            >
-                {label}
-            </Button>
+        <div className="flex items-center gap-2">
+            {deficit > 0 && (
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-red-400 hover:text-red-700 hover:bg-red-50"
+                    title="Report Loss"
+                    onClick={() => {
+                        if (confirm(`Report missing items?`)) onReportLoss(deficit);
+                    }}
+                >
+                    <AlertCircle className="h-4 w-4" />
+                </Button>
+            )}
+
+            <div className="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200">
+                <input
+                    type="number"
+                    className="w-16 bg-transparent text-center text-sm font-semibold focus:outline-none placeholder:text-slate-400"
+                    placeholder="Qty"
+                    value={qtyValue}
+                    onChange={(e) => onQtyChange(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" && qtyValue) {
+                            // Optionally handle enter key here
+                        }
+                    }}
+                />
+                <div className="w-px h-4 bg-slate-300 mx-1"></div>
+                <div className="flex gap-1">
+                    <Button
+                        size="sm"
+                        className="h-7 px-2 bg-white hover:bg-indigo-50 text-indigo-600 border border-slate-200 shadow-sm text-xs font-bold"
+                        title="Dispatch (Issue)"
+                        onClick={() => handleAction("dispatch")}
+                    >
+                        Out
+                    </Button>
+                    <Button
+                        size="sm"
+                        className="h-7 px-2 bg-white hover:bg-emerald-50 text-emerald-600 border border-slate-200 shadow-sm text-xs font-bold"
+                        title="Return"
+                        onClick={() => handleAction("return")}
+                    >
+                        In
+                    </Button>
+                </div>
+            </div>
         </div>
-    );
+    )
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import { ReactNode } from "react";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -15,22 +16,35 @@ interface PageHeaderProps {
     description?: string;
     actions?: ReactNode;
     mobileActions?: { label: string; onClick: () => void; variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" }[];
+    backUrl?: string;
 }
 
-export function PageHeader({ title, description, actions, mobileActions }: PageHeaderProps) {
+export function PageHeader({ title, description, actions, mobileActions, backUrl }: PageHeaderProps) {
+    const router = useRouter();
+
     return (
-        <div className="flex flex-col gap-4 pb-6 pt-2 md:flex-row md:items-center md:justify-between border-b mb-6">
+        <div className="flex flex-col gap-4 pb-6 pt-2 md:flex-row md:items-center md:justify-between border-b border-slate-100 mb-8">
             <div className="space-y-1.5">
-                <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+                {backUrl && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="-ml-3 h-8 text-slate-500 hover:text-slate-900 mb-1"
+                        onClick={() => router.push(backUrl)}
+                    >
+                        <ChevronLeft className="mr-1 h-4 w-4" /> Back
+                    </Button>
+                )}
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">{title}</h1>
                 {description && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm md:text-base text-slate-500 max-w-2xl">
                         {description}
                     </p>
                 )}
             </div>
 
             {/* Desktop Actions */}
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-3">
                 {actions}
             </div>
 
@@ -41,14 +55,18 @@ export function PageHeader({ title, description, actions, mobileActions }: PageH
                 {mobileActions && mobileActions.length > 0 && (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" className="rounded-full">
                                 <MoreVertical className="h-5 w-5" />
                                 <span className="sr-only">More actions</span>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-lg">
                             {mobileActions.map((action, index) => (
-                                <DropdownMenuItem key={index} onClick={action.onClick} className={action.variant === "destructive" ? "text-red-600" : ""}>
+                                <DropdownMenuItem
+                                    key={index}
+                                    onClick={action.onClick}
+                                    className={`py-3 ${action.variant === "destructive" ? "text-red-600 focus:text-red-600 focus:bg-red-50" : ""}`}
+                                >
                                     {action.label}
                                 </DropdownMenuItem>
                             ))}

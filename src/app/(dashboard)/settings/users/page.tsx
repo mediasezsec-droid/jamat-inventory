@@ -36,15 +36,14 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+} from "@/components/ui/drawer";
 import { User } from "@/types";
 
 const userSchema = z.object({
@@ -133,10 +132,10 @@ export default function UsersPage() {
 
     const getRoleBadge = (role: string) => {
         switch (role) {
-            case "ADMIN": return <Badge className="bg-red-500">Admin</Badge>;
-            case "MANAGER": return <Badge className="bg-amber-500">Manager</Badge>;
-            case "STAFF": return <Badge className="bg-blue-500">Staff</Badge>;
-            default: return <Badge variant="secondary">Watcher</Badge>;
+            case "ADMIN": return <Badge className="bg-gradient-to-r from-red-500 to-rose-500 text-white border-0">Admin</Badge>;
+            case "MANAGER": return <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">Manager</Badge>;
+            case "STAFF": return <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0">Staff</Badge>;
+            default: return <Badge variant="secondary" className="bg-slate-200 text-slate-600">Watcher</Badge>;
         }
     };
 
@@ -249,15 +248,16 @@ export default function UsersPage() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {users.map((user) => (
-                        <Card key={user.uid} className="group hover:shadow-md transition-all duration-300 border-slate-200">
+                        <Card key={user.uid} className="group hover:shadow-lg transition-all duration-300 border-slate-200 overflow-hidden">
+                            <div className="h-2 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500"></div>
                             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold">
+                                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-bold text-lg shadow-md">
                                         {(user.name || user.username).charAt(0).toUpperCase()}
                                     </div>
                                     <div>
                                         <CardTitle className="text-base font-semibold text-slate-900">{user.name || user.username}</CardTitle>
-                                        <CardDescription className="text-xs">@{user.username}</CardDescription>
+                                        <CardDescription className="text-sm">@{user.username}</CardDescription>
                                     </div>
                                 </div>
                                 {getRoleBadge(user.role)}
@@ -306,20 +306,29 @@ export default function UsersPage() {
                 </DialogContent>
             </Dialog>
 
-            <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
+            <Drawer open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+                <DrawerContent className="px-4 pb-8">
+                    <DrawerHeader className="text-center pt-6">
+                        <DrawerTitle className="text-xl font-bold">Delete User</DrawerTitle>
+                        <DrawerDescription className="text-slate-500 mt-2">
                             This action cannot be undone. This will permanently delete the user account.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                        </DrawerDescription>
+                    </DrawerHeader>
+                    <DrawerFooter className="flex flex-col gap-3 mt-4">
+                        <Button
+                            onClick={handleDelete}
+                            className="w-full h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white"
+                        >
+                            Yes, Delete User
+                        </Button>
+                        <DrawerClose asChild>
+                            <Button variant="outline" className="w-full h-12 rounded-xl border-slate-300">
+                                Cancel
+                            </Button>
+                        </DrawerClose>
+                    </DrawerFooter>
+                </DrawerContent>
+            </Drawer>
         </div>
     );
 }

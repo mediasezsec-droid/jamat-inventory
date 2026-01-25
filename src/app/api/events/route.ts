@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
 import { Event } from "@/types";
+import { auth } from "@/lib/auth";
 
 export async function GET(req: Request) {
   try {
@@ -47,7 +48,24 @@ export async function GET(req: Request) {
     );
   }
 }
+
 export async function POST(req: Request) {
+  // RBAC: Only ADMIN and MANAGER can create events
+  const session = await auth();
+  const user = session?.user as any;
+  const role = user?.role;
+
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (role !== "ADMIN" && role !== "MANAGER") {
+    return NextResponse.json(
+      { error: "Forbidden - Insufficient permissions" },
+      { status: 403 },
+    );
+  }
+
   try {
     const body = await req.json();
     const {
