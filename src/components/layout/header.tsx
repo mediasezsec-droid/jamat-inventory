@@ -26,14 +26,21 @@ export function Header() {
     };
 
     return (
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-slate-200 bg-white/80 px-6 backdrop-blur-xl transition-all print:hidden">
+        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-slate-200 bg-white/80 px-6 backdrop-blur-xl transition-all print:hidden">
             {/* Search Bar - Global */}
             <div className="flex flex-1 items-center gap-4">
                 <div className="relative w-full max-w-sm hidden md:block">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <Input
-                        placeholder="Search events, inventory..."
+                        placeholder="Search..."
                         className="pl-9 bg-slate-50 border-slate-200 focus:bg-white h-10 w-full"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                const target = (e.currentTarget as HTMLInputElement).value;
+                                const base = window.location.pathname.includes('/inventory') ? '/inventory' : '/events';
+                                router.push(`${base}?q=${target}`);
+                            }
+                        }}
                     />
                 </div>
             </div>

@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Upload, MoreHorizontal, AlertCircle, CheckCircle2, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -40,12 +40,15 @@ import { InventoryItem } from "@/types";
 import { InventoryStats } from "../inventory-stats";
 import { DataTable } from "@/components/ui/data-table-revamp";
 import { useCurrentRole } from "@/hooks/use-current-role";
+import { addItem, deleteItem, bulkImportItems } from "@/app/actions/inventory";
+
 interface InventoryClientProps {
     initialItems: InventoryItem[];
 }
 
 export default function InventoryClient({ initialItems }: InventoryClientProps) {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const role = useCurrentRole();
     const canManage = role === "ADMIN" || role === "MANAGER";
     const [items, setItems] = useState<InventoryItem[]>(initialItems);
@@ -55,6 +58,11 @@ export default function InventoryClient({ initialItems }: InventoryClientProps) 
     const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
 
+    // Sync props to state for router.refresh()
+    useEffect(() => {
+        setItems(initialItems);
+    }, [initialItems]);
+
     // New Item State
     const [newItem, setNewItem] = useState({
         name: "",
@@ -62,16 +70,6 @@ export default function InventoryClient({ initialItems }: InventoryClientProps) 
         quantity: "",
         unit: "pieces"
     });
-
-    const fetchInventory = async () => {
-        try {
-            const res = await fetch("/api/inventory");
-            const data = await res.json();
-            setItems(data);
-        } catch (error) {
-            toast.error("Failed to load inventory");
-        }
-    };
 
     const handleAddItem = async () => {
         if (!newItem.name || !newItem.category || !newItem.quantity) {
@@ -81,23 +79,19 @@ export default function InventoryClient({ initialItems }: InventoryClientProps) 
 
         setIsAdding(true);
         try {
-            const res = await fetch("/api/inventory", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: newItem.name,
-                    category: newItem.category,
-                    totalQuantity: Number(newItem.quantity),
-                    unit: newItem.unit
-                }),
+            const res = await addItem({
+                name: newItem.name,
+                category: newItem.category,
+                totalQuantity: Number(newItem.quantity),
+                unit: newItem.unit
             });
 
-            if (!res.ok) throw new Error("Failed to add item");
+            if (!res.success) throw new Error(res.error);
 
             toast.success("Item added successfully");
             setNewItem({ name: "", category: "", quantity: "", unit: "pieces" });
             setIsAddSheetOpen(false);
-            fetchInventory();
+            router.refresh();
         } catch (error) {
             toast.error("Failed to add item");
         } finally {
@@ -107,14 +101,18 @@ export default function InventoryClient({ initialItems }: InventoryClientProps) 
 
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this item?")) return;
+
+        // Optimistic update
+        const previousItems = [...items];
+        setItems(prev => prev.filter(i => i.id !== id));
+
         try {
-            const res = await fetch(`/api/inventory/${id}`, {
-                method: "DELETE",
-            });
-            if (!res.ok) throw new Error("Failed to delete");
+            const res = await deleteItem(id);
+            if (!res.success) throw new Error(res.error);
             toast.success("Item deleted");
-            fetchInventory();
+            router.refresh();
         } catch (error) {
+            setItems(previousItems); // Revert
             toast.error("Failed to delete item");
         }
     };
@@ -130,18 +128,14 @@ export default function InventoryClient({ initialItems }: InventoryClientProps) 
                 return { name, category: category || "General", totalQuantity: Number(quantity), unit: unit || "pieces" };
             });
 
-            const res = await fetch("/api/inventory/bulk", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ items: parsedItems }),
-            });
+            const res = await bulkImportItems(parsedItems);
 
-            if (!res.ok) throw new Error("Failed to upload");
+            if (!res.success) throw new Error(res.error);
 
             toast.success("Bulk upload successful");
             setBulkData("");
             setIsBulkOpen(false);
-            fetchInventory();
+            router.refresh();
         } catch (error) {
             toast.error("Failed to upload. Check format: Name, Category, Quantity, Unit");
         } finally {
@@ -226,6 +220,14 @@ export default function InventoryClient({ initialItems }: InventoryClientProps) 
                 data={items}
                 columns={columns}
                 searchKey="name"
+                defaultSearchTerm={searchParams.get("q") || ""}
+                filterKey="category"
+                filterOptions={[
+                    { label: "Utensils", value: "Utensils" },
+                    { label: "Furniture", value: "Furniture" },
+                    { label: "Electronics", value: "Electronics" },
+                    { label: "General", value: "General" },
+                ]}
                 action={
                     canManage && (
                         <div className="flex gap-2">

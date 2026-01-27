@@ -29,10 +29,18 @@ export default function EventDetailsClient({ initialEvent, initialInventory, ini
     const [logs] = useState<any[]>(initialLogs);
 
     const getItemStats = (itemId: string) => {
-        const itemLogs = logs.filter(log => log.itemId === itemId);
-        const issued = itemLogs.filter(log => log.action === "ISSUE").reduce((acc, log) => acc + log.quantity, 0);
-        const returned = itemLogs.filter(log => log.action === "RETURN").reduce((acc, log) => acc + log.quantity, 0);
-        const lost = itemLogs.filter(log => log.action === "LOSS").reduce((acc, log) => acc + log.quantity, 0);
+        const itemLogs = logs.filter(log => (log.itemId === itemId) || (log.details?.itemId === itemId));
+        let issued = 0, returned = 0, lost = 0;
+
+        itemLogs.forEach(log => {
+            const qty = Number(log.quantity || log.details?.quantity || 0);
+            const action = log.action || "";
+
+            if (action.includes("ISSUE") || action.includes("REMOVED")) issued += qty;
+            else if (action.includes("RETURN") || action.includes("RETURNED")) returned += qty;
+            else if (action.includes("LOSS")) lost += qty;
+        });
+
         const deficit = issued - returned - lost;
         return { issued, returned, lost, deficit };
     };
@@ -40,7 +48,7 @@ export default function EventDetailsClient({ initialEvent, initialInventory, ini
     // Filter inventory to only show items that were used (issued > 0)
     const usedInventory = inventory.filter(item => {
         const stats = getItemStats(item.id);
-        return stats.issued > 0;
+        return stats.issued > 0 || stats.returned > 0;
     });
 
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -230,7 +238,10 @@ export default function EventDetailsClient({ initialEvent, initialInventory, ini
                                         <TableBody>
                                             {usedInventory.map(item => {
                                                 const stats = getItemStats(item.id);
-                                                const isSettled = stats.deficit === 0;
+                                                // Settled only if fully accounted for AND no losses reported
+                                                const isSettled = stats.deficit <= 0 && stats.lost === 0;
+                                                const isPending = stats.deficit > 0;
+
                                                 return (
                                                     <TableRow key={item.id}>
                                                         <TableCell className="font-medium">{item.name}</TableCell>
@@ -238,11 +249,17 @@ export default function EventDetailsClient({ initialEvent, initialInventory, ini
                                                         <TableCell className="text-center">{stats.returned}</TableCell>
                                                         <TableCell className={`text-center ${stats.lost > 0 ? "text-red-600 font-bold" : "text-slate-400"}`}>{stats.lost || "-"}</TableCell>
                                                         <TableCell className="text-right">
-                                                            {isSettled ? (
-                                                                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100">Settled</Badge>
-                                                            ) : (
-                                                                <Badge variant="destructive">Deficit: {stats.deficit}</Badge>
-                                                            )}
+                                                            <div className="flex flex-col items-end gap-1">
+                                                                {isSettled && (
+                                                                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100">Settled</Badge>
+                                                                )}
+                                                                {isPending && (
+                                                                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100">Pending: {stats.deficit}</Badge>
+                                                                )}
+                                                                {stats.lost > 0 && (
+                                                                    <Badge variant="destructive" className="h-5 text-[10px] px-1.5">{stats.lost} Lost</Badge>
+                                                                )}
+                                                            </div>
                                                         </TableCell>
                                                     </TableRow>
                                                 );
@@ -288,6 +305,22 @@ export default function EventDetailsClient({ initialEvent, initialInventory, ini
                                         {event.mic && <Badge variant="secondary" className="bg-indigo-50 text-indigo-700">Mic Required</Badge>}
                                         {(event as any).crockeryRequired && <Badge variant="secondary" className="bg-cyan-50 text-cyan-700">Crockery</Badge>}
                                         {(event as any).masjidLight && <Badge variant="secondary" className="bg-yellow-50 text-yellow-700">Masjid Light</Badge>}
+
+                                        {/* Missing Items Added */}
+                                        {(event as any).thaalForDevri && <Badge variant="secondary" className="bg-purple-50 text-purple-700">Thaal for Devri</Badge>}
+                                        {(event as any).paat && <Badge variant="secondary" className="bg-pink-50 text-pink-700">Paat Required</Badge>}
+                                        {(event as any).decorations && <Badge variant="secondary" className="bg-rose-50 text-rose-700">Decorations</Badge>}
+
+                                        {(event.extraChilamchiLota > 0) && (
+                                            <Badge variant="outline" className="border-slate-300">
+                                                {event.extraChilamchiLota} Extra Chilamchi/Lota
+                                            </Badge>
+                                        )}
+                                        {((event.gasCount || 0) > 0) && (
+                                            <Badge variant="outline" className="border-slate-300">
+                                                {event.gasCount} Gas Cylinder{((event.gasCount || 0) > 1) ? 's' : ''}
+                                            </Badge>
+                                        )}
                                     </div>
                                 </div>
                             </div>

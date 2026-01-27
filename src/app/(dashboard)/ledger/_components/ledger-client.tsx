@@ -27,29 +27,19 @@ interface LedgerEntry {
     timestamp: number;
 }
 
-export function LedgerClient() {
-    const [logs, setLogs] = useState<LedgerEntry[]>([]);
-    const [filteredLogs, setFilteredLogs] = useState<LedgerEntry[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+interface LedgerClientProps {
+    initialLogs: LedgerEntry[];
+}
+
+export function LedgerClient({ initialLogs }: LedgerClientProps) {
+    const [logs, setLogs] = useState<LedgerEntry[]>(initialLogs);
+    const [filteredLogs, setFilteredLogs] = useState<LedgerEntry[]>(initialLogs);
     const [searchQuery, setSearchQuery] = useState("");
     const [actionFilter, setActionFilter] = useState("ALL");
 
     useEffect(() => {
-        const fetchLogs = async () => {
-            try {
-                const res = await fetch("/api/ledger");
-                const data = await res.json();
-                setLogs(data);
-                setFilteredLogs(data);
-            } catch (error) {
-                console.error("Failed to fetch ledger", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchLogs();
-    }, []);
+        setLogs(initialLogs);
+    }, [initialLogs]);
 
     useEffect(() => {
         let result = logs;
@@ -145,14 +135,7 @@ export function LedgerClient() {
         );
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex flex-col items-center justify-center h-[60vh] gap-3">
-                <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-                <p className="text-slate-500">Loading ledger...</p>
-            </div>
-        );
-    }
+
 
     return (
         <div className="container mx-auto p-6 md:p-10 max-w-[1600px] space-y-10">

@@ -27,6 +27,15 @@ A comprehensive, enterprise-grade inventory and event management system built fo
 
 ## ✨ Features
 
+### 🎨 Interactive Floor Plan Designer
+- **Drag & Drop Interface** for visual event plotting
+- **Customizable Hall Dimensions**
+- **Library of Items** (Tables, Chairs, Mics, Lights) with specific dimensions
+- **Real-time Collision Detection** to prevent overlaps
+- **Public Shareable Links** for read-only client viewing
+- **Save & Load** multiple layouts per event
+- **PDF Export** of layouts for setup teams
+
 ### 🔐 Authentication & User Management
 - **Secure Login System** with credential-based authentication (NextAuth v5)
 - **Forgot Password Flow** with OTP verification via email
@@ -81,6 +90,7 @@ A comprehensive, enterprise-grade inventory and event management system built fo
 - **Tailwind CSS** - Utility-first styling
 - **shadcn/ui** - High-quality component library
 - **Radix UI** - Headless UI primitives
+- **dnd-kit** - Drag and drop primitives for Floor Plan
 - **React Hook Form** - Form state management
 - **Zod** - Schema validation
 - **date-fns** - Date manipulation
@@ -99,7 +109,7 @@ A comprehensive, enterprise-grade inventory and event management system built fo
 
 ### Data Processing
 - **XLSX (SheetJS)** - Excel file handling
-- **PDF Generation** - Print layouts
+- **jspre** & **jspdf-autotable** - PDF generation
 
 ---
 
@@ -126,6 +136,8 @@ A comprehensive, enterprise-grade inventory and event management system built fo
 │  - events        │         │  - event_logs    │
 │  - inventory     │         │  - otps          │
 │  - master_data   │         └──────────────────┘
+│  - floor_plans   │
+│  - floor_item_types
 └──────────────────┘
 ```
 
@@ -310,7 +322,19 @@ openssl rand -base64 32
 - `src/app/(dashboard)/inventory/` - Inventory pages
 - `src/app/api/inventory/` - Inventory API routes
 
-### 3. **User Management**
+### 3. **Floor Plan Module**
+#### Features
+- Interactive drag-and-drop designer
+- Save multiple layouts per event
+- Public shareable links (read-only)
+- PDF Export
+
+#### Files
+- `src/app/(dashboard)/events/floor-plan/` - Designer UI
+- `src/app/public/floor-plan/` - Public viewer
+- `src/app/api/floor-plans/` - Server Actions & API
+
+### 4. **User Management**
 #### Features
 - Create users with roles
 - Edit user details (ADMIN only)
@@ -323,7 +347,7 @@ openssl rand -base64 32
 - `src/app/api/users/` - User API routes
 - `src/app/(dashboard)/profile/` - User profile page
 
-### 4. **Logging & Audit Trail**
+### 5. **Logging & Audit Trail**
 #### Logged Actions
 - `USER_LOGIN` - Successful login
 - `USER_LOGOUT` - User logout
@@ -341,7 +365,7 @@ openssl rand -base64 32
 - `src/app/api/logs/` - Logs API
 - `src/app/(dashboard)/logs/` - Logs viewer
 
-### 5. **Data Export & Restore**
+### 6. **Data Export & Restore**
 #### Export Formats
 - **Excel (.xlsx)** - Events, Inventory, Users, Logs, Ledger
 - **JSON (.json)** - Raw data exports

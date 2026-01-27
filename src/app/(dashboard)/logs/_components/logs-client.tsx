@@ -9,14 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/ui/page-header";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useRouter } from "next/navigation";
 
 interface Log {
     id: string;
@@ -27,34 +21,28 @@ interface Log {
     timestamp: string;
 }
 
-export function LogsClient() {
-    const [logs, setLogs] = useState<Log[]>([]);
-    const [filteredLogs, setFilteredLogs] = useState<Log[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+interface LogsClientProps {
+    initialLogs: Log[];
+}
+
+export function LogsClient({ initialLogs }: LogsClientProps) {
+    const router = useRouter();
+    const [logs, setLogs] = useState<Log[]>(initialLogs);
+    const [filteredLogs, setFilteredLogs] = useState<Log[]>(initialLogs);
     const [searchQuery, setSearchQuery] = useState("");
     const [actionFilter, setActionFilter] = useState("ALL");
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    const fetchLogs = async (showRefreshing = false) => {
-        if (showRefreshing) setIsRefreshing(true);
-        try {
-            const res = await fetch("/api/logs");
-            const data = await res.json();
-            setLogs(data);
-            setFilteredLogs(data);
-        } catch (error) {
-            console.error("Failed to fetch logs", error);
-        } finally {
-            setIsLoading(false);
-            setIsRefreshing(false);
-        }
-    };
-
+    // Sync props to state for router.refresh()
     useEffect(() => {
-        fetchLogs();
-        const interval = setInterval(() => fetchLogs(), 10000);
-        return () => clearInterval(interval);
-    }, []);
+        setLogs(initialLogs);
+    }, [initialLogs]);
+
+    const handleRefresh = () => {
+        setIsRefreshing(true);
+        router.refresh();
+        setTimeout(() => setIsRefreshing(false), 1000); // Visual feedback
+    };
 
     useEffect(() => {
         let result = logs;
@@ -150,15 +138,6 @@ export function LogsClient() {
         );
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex flex-col items-center justify-center h-[60vh] gap-3">
-                <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-                <p className="text-slate-500">Loading system logs...</p>
-            </div>
-        );
-    }
-
     return (
         <div className="container mx-auto p-6 md:p-10 max-w-[1600px] space-y-10">
             <PageHeader
@@ -168,7 +147,7 @@ export function LogsClient() {
                     <Button
                         id="btn-log-refresh"
                         variant="outline"
-                        onClick={() => fetchLogs(true)}
+                        onClick={handleRefresh}
                         disabled={isRefreshing}
                         className="rounded-lg"
                     >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format, addDays, subDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
@@ -24,7 +24,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { enGB } from "date-fns/locale";
-import useSWR from "swr";
 import { Event } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -51,12 +50,25 @@ export default function DashboardClient({ initialEvents }: DashboardClientProps)
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-    // Fetch events with SSR fallback
-    const { data: events, isLoading, mutate } = useSWR<Event[]>(
-        `/api/events?date=${date ? date.toISOString() : ''}`,
-        fetcher,
-        { fallbackData: initialEvents }
-    );
+    const [events, setEvents] = useState<Event[]>(initialEvents);
+
+    // Sync props to state handling router refreshes
+    useEffect(() => {
+        setEvents(initialEvents);
+    }, [initialEvents]);
+
+    // Update URL when date changes to trigger SSR refetch
+    const handleDateChange = (newDate: Date | undefined) => {
+        setDate(newDate);
+        setIsCalendarOpen(false);
+        if (newDate) {
+            router.push(`/?date=${newDate.toISOString()}`);
+        } else {
+            router.push("/");
+        }
+    };
+
+    const isLoading = false; // Data is now SSR
 
     // Metrics
     const totalThaal = events?.reduce((sum, e) => sum + (e.thaalCount || 0), 0) || 0;
@@ -70,10 +82,7 @@ export default function DashboardClient({ initialEvents }: DashboardClientProps)
 
     const isAdmin = (session?.user as any)?.role === "ADMIN";
 
-    const handleDateChange = (newDate: Date | undefined) => {
-        setDate(newDate);
-        setIsCalendarOpen(false);
-    };
+
 
     const handleCancel = async (e: React.MouseEvent, eventId: string) => {
         e.stopPropagation();
@@ -88,7 +97,7 @@ export default function DashboardClient({ initialEvents }: DashboardClientProps)
 
             if (res.ok) {
                 toast.success("Event cancelled");
-                mutate();
+                router.refresh();
             }
         } catch (error) {
             console.error("Failed to cancel event", error);
@@ -112,7 +121,7 @@ export default function DashboardClient({ initialEvents }: DashboardClientProps)
                 toast.success("Event deleted");
                 setDeleteConfirmOpen(false);
                 setSelectedEventId(null);
-                mutate();
+                router.refresh();
                 return;
             }
 
@@ -317,11 +326,11 @@ export default function DashboardClient({ initialEvents }: DashboardClientProps)
                             className="w-full"
                             locale={enGB}
                             classNames={{
-                                day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground rounded-md shadow-sm",
-                                day_today: "bg-secondary text-foreground font-bold rounded-md",
-                                head_cell: "text-muted-foreground font-medium text-[0.8rem]",
-                                cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-secondary/50 [&:has([aria-selected])]:bg-secondary first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                                day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-secondary rounded-md transition-colors",
+                                day_selected: "bg-indigo-600 text-white hover:bg-indigo-700 focus:bg-indigo-700 rounded-md",
+                                day_today: "bg-slate-100 text-slate-900 font-bold border border-slate-200 rounded-md",
+                                head_cell: "text-muted-foreground font-medium text-[0.8rem] text-slate-500",
+                                cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                                day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-slate-100 rounded-md transition-colors text-slate-700",
                             }}
                         />
                     </Card>
@@ -344,6 +353,13 @@ export default function DashboardClient({ initialEvents }: DashboardClientProps)
                                 onSelect={handleDateChange}
                                 className="rounded-md"
                                 locale={enGB}
+                                classNames={{
+                                    day_selected: "bg-indigo-600 text-white hover:bg-indigo-700 focus:bg-indigo-700 rounded-md",
+                                    day_today: "bg-slate-100 text-slate-900 font-bold border border-slate-200 rounded-md",
+                                    head_cell: "text-muted-foreground font-medium text-[0.8rem] text-slate-500",
+                                    cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                                    day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-slate-100 rounded-md transition-colors text-slate-700",
+                                }}
                             />
                         </div>
                     </SheetContent>

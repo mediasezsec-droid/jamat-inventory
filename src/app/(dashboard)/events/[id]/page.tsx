@@ -46,7 +46,15 @@ export default async function EventDetailsPage({ params }: PageProps) {
             ...i,
         })) as unknown as InventoryItem[];
 
-        const safeLogs: any[] = []; // Placeholder for logs until fully migrated
+        // Fetch logs from 'event_logs/{eventId}'
+        const logsRef = rtdb.ref(`event_logs/${eventId}`);
+        const logsSnapshot = await logsRef.once("value");
+        const safeLogs: any[] = [];
+        logsSnapshot.forEach((child) => {
+            safeLogs.push({ id: child.key, ...child.val() });
+        });
+        // Sort by timestamp desc
+        safeLogs.sort((a, b) => b.timestamp - a.timestamp);
 
         return (
             <EventDetailsClient

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/ui/page-header";
+import { useRouter } from "next/navigation"; // Added import
 import {
     Drawer,
     DrawerClose,
@@ -37,9 +38,13 @@ interface LostItemLog {
     remainingQuantity?: number;
 }
 
-export default function LostItemsClient() {
-    const [logs, setLogs] = useState<LostItemLog[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+interface LostItemsClientProps {
+    initialLogs: LostItemLog[];
+}
+
+export default function LostItemsClient({ initialLogs }: LostItemsClientProps) {
+    const router = useRouter();
+    const [logs, setLogs] = useState<LostItemLog[]>(initialLogs);
     const [searchTerm, setSearchTerm] = useState("");
 
     // Recovery State
@@ -47,25 +52,17 @@ export default function LostItemsClient() {
     const [selectedLog, setSelectedLog] = useState<LostItemLog | null>(null);
     const [recoverQty, setRecoverQty] = useState<number>(1);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-    const fetchData = async () => {
-        setIsLoading(true);
-        try {
-            const res = await fetch("/api/inventory/lost");
-            if (!res.ok) throw new Error("Failed to fetch lost items");
-            const data = await res.json();
-            setLogs(data);
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to load lost items");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        setLogs(initialLogs);
+    }, [initialLogs]);
+
+    const handleRefresh = () => {
+        setIsRefreshing(true);
+        router.refresh();
+        setTimeout(() => setIsRefreshing(false), 1000);
+    };
 
     const handleRecoverClick = (log: LostItemLog) => {
         const remaining = log.remainingQuantity ?? log.details.quantity;
@@ -98,7 +95,7 @@ export default function LostItemsClient() {
 
             toast.success(`Recovered ${quantity} items successfully`);
             setIsDrawerOpen(false);
-            fetchData();
+            router.refresh();
         } catch (error) {
             console.error(error);
             toast.error("Failed to recover item");
@@ -127,14 +124,7 @@ export default function LostItemsClient() {
 
     const totalLostItems = logs.reduce((sum, log) => sum + (log.remainingQuantity ?? log.details.quantity), 0);
 
-    if (isLoading) {
-        return (
-            <div className="flex flex-col items-center justify-center h-[60vh] gap-3">
-                <Loader2 className="h-10 w-10 animate-spin text-red-500" />
-                <p className="text-slate-500">Loading lost items...</p>
-            </div>
-        );
-    }
+    if (false) return null; // Logic removed
 
     return (
         <div className="container mx-auto p-6 md:p-10 max-w-[1600px] space-y-10">
@@ -142,8 +132,8 @@ export default function LostItemsClient() {
                 title="Lost Items Recovery"
                 description="Track and recover items reported as lost or damaged across events."
                 actions={
-                    <Button variant="outline" onClick={fetchData} className="rounded-lg">
-                        <RotateCcw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
+                    <Button variant="outline" onClick={handleRefresh} className="rounded-lg" disabled={isRefreshing}>
+                        <RotateCcw className={cn("h-4 w-4 mr-2", isRefreshing && "animate-spin")} />
                         Refresh
                     </Button>
                 }

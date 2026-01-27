@@ -9,7 +9,8 @@ import {
     ArrowUpDown,
     Package,
     ChevronsLeft,
-    ChevronsRight
+    ChevronsRight,
+    CheckCircle2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,14 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 interface Column<T> {
@@ -34,6 +43,8 @@ interface DataTableProps<T> {
     data: T[];
     columns: Column<T>[];
     searchKey?: keyof T;
+    filterKey?: keyof T;
+    filterOptions?: { label: string; value: string }[];
     onRowClick?: (item: T) => void;
     title?: string;
     description?: string;
@@ -41,29 +52,34 @@ interface DataTableProps<T> {
     emptyIcon?: React.ReactNode;
     emptyTitle?: string;
     emptyDescription?: string;
+    defaultSearchTerm?: string;
 }
 
 export function DataTable<T extends Record<string, any>>({
     data,
     columns,
     searchKey,
+    filterKey,
+    filterOptions,
     onRowClick,
     title,
     description,
     action,
     emptyIcon,
     emptyTitle = "No results found",
-    emptyDescription = "Try adjusting your search terms"
+    emptyDescription = "Try adjusting your search terms",
+    defaultSearchTerm = ""
 }: DataTableProps<T>) {
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchTerm, setSearchTerm] = useState(defaultSearchTerm);
+    const [filterValue, setFilterValue] = useState<string>("all");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
     // Filter
     const filteredData = data.filter((item) => {
-        if (!searchKey) return true;
-        const value = item[searchKey];
-        return String(value).toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = !searchKey ? true : String(item[searchKey]).toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesFilter = filterValue === "all" || !filterKey ? true : String(item[filterKey]) === filterValue;
+        return matchesSearch && matchesFilter;
     });
 
     // Pagination
@@ -94,10 +110,31 @@ export function DataTable<T extends Record<string, any>>({
                             />
                         </div>
                     )}
-                    {/* Filter Button */}
-                    <Button variant="outline" size="icon" className="shrink-0 h-10 w-10 rounded-lg border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700">
-                        <Filter className="h-4 w-4" />
-                    </Button>
+
+                    {/* Filter Dropdown */}
+                    {filterKey && filterOptions && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="icon" className={cn("shrink-0 h-10 w-10 rounded-lg border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700", filterValue !== "all" && "bg-indigo-50 text-indigo-600 border-indigo-200")}>
+                                    <Filter className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuLabel>Filter by {String(filterKey)}</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => setFilterValue("all")}>
+                                    <span className={cn("flex-1", filterValue === "all" && "font-bold")}>All</span>
+                                    {filterValue === "all" && <CheckCircle2 className="h-4 w-4 text-indigo-600" />}
+                                </DropdownMenuItem>
+                                {filterOptions.map((option) => (
+                                    <DropdownMenuItem key={option.value} onClick={() => setFilterValue(option.value)}>
+                                        <span className={cn("flex-1", filterValue === option.value && "font-bold")}>{option.label}</span>
+                                        {filterValue === option.value && <CheckCircle2 className="h-4 w-4 text-indigo-600" />}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
 
                     {action && <div className="ml-2">{action}</div>}
                 </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { format, isPast, isToday, isFuture } from "date-fns";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
     Plus,
@@ -33,49 +33,36 @@ import { toast } from "sonner";
 import { Event } from "@/types";
 import { useCurrentRole } from "@/hooks/use-current-role";
 
-export default function EventsPage() {
+interface EventsPageProps {
+    initialEvents: Event[];
+}
+
+export default function EventsPage({ initialEvents }: EventsPageProps) {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const role = useCurrentRole();
-    const [events, setEvents] = useState<Event[]>([]);
-    const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [search, setSearch] = useState("");
+    const [events, setEvents] = useState<Event[]>(initialEvents);
+    const [filteredEvents, setFilteredEvents] = useState<Event[]>(initialEvents);
+    const [search, setSearch] = useState(searchParams.get("q") || "");
+
+    // Sync props to state (for router.refresh updates)
+    useEffect(() => {
+        setEvents(initialEvents);
+        setFilteredEvents(initialEvents);
+    }, [initialEvents]);
 
     // Delete State
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [relatedData, setRelatedData] = useState<{ count: number } | null>(null);
     const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-    const fetchEvents = async () => {
-        try {
-            const res = await fetch("/api/events");
-            if (res.ok) {
-                const data = await res.json();
-                const sorted = data.sort((a: Event, b: Event) =>
-                    new Date(b.occasionDate).getTime() - new Date(a.occasionDate).getTime()
-                );
-                setEvents(sorted);
-                setFilteredEvents(sorted);
-            }
-        } catch (error) {
-            console.error("Failed to load events");
-            toast.error("Failed to load events");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchEvents();
-    }, []);
-
     useEffect(() => {
         const lower = search.toLowerCase();
         const filtered = events.filter(e =>
-            e.name.toLowerCase().includes(lower) ||
-            e.mobile.includes(lower) ||
-            e.description.toLowerCase().includes(lower) ||
-            (Array.isArray(e.hall) ? e.hall.join(" ") : e.hall).toLowerCase().includes(lower)
+            (e.name || "").toLowerCase().includes(lower) ||
+            (e.mobile || "").includes(lower) ||
+            (e.description || "").toLowerCase().includes(lower) ||
+            (Array.isArray(e.hall) ? e.hall.join(" ") : (e.hall || "")).toLowerCase().includes(lower)
         );
         setFilteredEvents(filtered);
     }, [search, events]);
@@ -93,7 +80,7 @@ export default function EventsPage() {
 
             if (res.ok) {
                 toast.success("Event cancelled");
-                fetchEvents(); // Refresh list
+                router.refresh();
             }
         } catch (error) {
             console.error("Failed to cancel event", error);
@@ -117,7 +104,7 @@ export default function EventsPage() {
                 toast.success("Event deleted");
                 setDeleteConfirmOpen(false);
                 setSelectedEventId(null);
-                fetchEvents();
+                router.refresh();
                 return;
             }
 
@@ -236,11 +223,7 @@ export default function EventsPage() {
             </div>
 
             {/* Events List */}
-            {isLoading ? (
-                <div className="py-20 flex justify-center">
-                    <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                </div>
-            ) : filteredEvents.length === 0 ? (
+            {filteredEvents.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
                     <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-4">
                         <CalendarIcon className="w-8 h-8 text-slate-300" />
