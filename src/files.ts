@@ -60,7 +60,9 @@ export const APP_FILES = {
     "src/app/(dashboard)/users/_components/users-client.tsx",
     "src/components/layout/sidebar.tsx",
     "src/components/rbac-wrapper.tsx",
+    "src/components/ui/calendar.tsx",
   ],
+  lib: ["src/lib/pdf-generator.ts"],
   api: [
     "src/app/api/admin/export/route.ts",
     "src/app/api/admin/reset/route.ts",
