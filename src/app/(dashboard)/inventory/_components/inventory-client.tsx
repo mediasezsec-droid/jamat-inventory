@@ -201,10 +201,10 @@ export default function InventoryClient({ initialItems }: InventoryClientProps) 
                         {canManage && (
                             <>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => router.push(`/inventory/${item.id}/edit`)}>
+                                <DropdownMenuItem id={`btn-inventory-edit-${item.id}`} onClick={() => router.push(`/inventory/${item.id}/edit`)}>
                                     Edit Item
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(item.id)}>
+                                <DropdownMenuItem id={`btn-inventory-delete-${item.id}`} className="text-red-600" onClick={() => handleDelete(item.id)}>
                                     Delete Item
                                 </DropdownMenuItem>
                             </>
@@ -231,7 +231,7 @@ export default function InventoryClient({ initialItems }: InventoryClientProps) 
                         <div className="flex gap-2">
                             <Dialog open={isBulkOpen} onOpenChange={setIsBulkOpen}>
                                 <DialogTrigger asChild>
-                                    <Button variant="outline" className="h-10">
+                                    <Button id="btn-inventory-bulk" variant="outline" className="h-10">
                                         <Upload className="mr-2 h-4 w-4" /> Bulk Import
                                     </Button>
                                 </DialogTrigger>
@@ -259,7 +259,7 @@ export default function InventoryClient({ initialItems }: InventoryClientProps) 
 
                             <Sheet open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen}>
                                 <SheetTrigger asChild>
-                                    <Button className="h-10 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md">
+                                    <Button id="btn-inventory-add" className="h-10 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md">
                                         <Plus className="mr-2 h-4 w-4" /> Add Item
                                     </Button>
                                 </SheetTrigger>
@@ -344,6 +344,7 @@ export default function InventoryClient({ initialItems }: InventoryClientProps) 
                                             </Button>
                                         </SheetClose>
                                         <Button
+                                            id="btn-inventory-quick-add-save"
                                             onClick={handleAddItem}
                                             disabled={isAdding}
                                             className="w-full sm:flex-1 h-11 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-md"

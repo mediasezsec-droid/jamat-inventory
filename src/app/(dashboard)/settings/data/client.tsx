@@ -139,10 +139,10 @@ export default function DataManagementPageClient() {
                                             <p className="text-xs text-slate-500">{item.desc}</p>
                                         </div>
                                         <div className="flex gap-2">
-                                            <Button variant="outline" size="sm" onClick={() => handleExport(item.id, "excel")} className="h-8">
+                                            <Button id={`btn-data-export-${item.id}-excel`} variant="outline" size="sm" onClick={() => handleExport(item.id, "excel")} className="h-8">
                                                 <FileSpreadsheet className="mr-2 h-3.5 w-3.5 text-green-600" /> Excel
                                             </Button>
-                                            <Button variant="outline" size="sm" onClick={() => handleExport(item.id, "json")} className="h-8">
+                                            <Button id={`btn-data-export-${item.id}-json`} variant="outline" size="sm" onClick={() => handleExport(item.id, "json")} className="h-8">
                                                 <FileJson className="mr-2 h-3.5 w-3.5 text-orange-600" /> JSON
                                             </Button>
                                         </div>
@@ -170,7 +170,7 @@ export default function DataManagementPageClient() {
                                 </div>
                                 <Drawer>
                                     <DrawerTrigger asChild>
-                                        <Button disabled={!restoreFile || isRestoring} className="w-full sm:w-auto">
+                                        <Button id="btn-data-restore" disabled={!restoreFile || isRestoring} className="w-full sm:w-auto">
                                             {isRestoring ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
                                             Restore Data
                                         </Button>
@@ -185,7 +185,7 @@ export default function DataManagementPageClient() {
                                             </DrawerDescription>
                                         </DrawerHeader>
                                         <DrawerFooter className="flex flex-col gap-3 mt-4">
-                                            <Button onClick={handleRestore} className="w-full h-12 rounded-xl bg-orange-600 hover:bg-orange-700 text-white">
+                                            <Button id="btn-data-restore-confirm" onClick={handleRestore} className="w-full h-12 rounded-xl bg-orange-600 hover:bg-orange-700 text-white">
                                                 Yes, Restore
                                             </Button>
                                             <DrawerClose asChild>
@@ -336,6 +336,7 @@ function SyncStatsPanel({ onSync, isSyncing }: { onSync: (dir: "firestore-to-neo
                     </div>
                     <div className="mt-auto">
                         <Button
+                            id="btn-data-sync-neon"
                             onClick={() => onSync("firestore-to-neon")}
                             disabled={isSyncing}
                             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
@@ -375,6 +376,7 @@ function SyncStatsPanel({ onSync, isSyncing }: { onSync: (dir: "firestore-to-neo
                     </div>
                     <div className="mt-auto">
                         <Button
+                            id="btn-data-sync-firestore"
                             onClick={() => onSync("neon-to-firestore")}
                             disabled={isSyncing}
                             variant="outline"
@@ -418,7 +420,7 @@ function ResetSystemButton() {
     return (
         <Drawer open={isOpen} onOpenChange={setIsOpen}>
             <DrawerTrigger asChild>
-                <Button variant="destructive">Reset System</Button>
+                <Button id="btn-data-reset" variant="destructive">Reset System</Button>
             </DrawerTrigger>
             <DrawerContent className="px-4 pb-8">
                 <DrawerHeader className="text-center pt-6">
@@ -447,6 +449,7 @@ function ResetSystemButton() {
                 </div>
                 <DrawerFooter className="flex flex-col gap-3">
                     <Button
+                        id="btn-data-reset-confirm"
                         variant="destructive"
                         onClick={handleReset}
                         disabled={confirmText !== "DELETE" || isResetting}

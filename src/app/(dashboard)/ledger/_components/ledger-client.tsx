@@ -166,6 +166,7 @@ export function LedgerClient() {
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input
+                        id="input-ledger-search"
                         placeholder="Search by user, item, or event..."
                         className="pl-9 h-11 rounded-lg bg-white border-slate-200"
                         value={searchQuery}
@@ -173,7 +174,7 @@ export function LedgerClient() {
                     />
                 </div>
                 <Select value={actionFilter} onValueChange={setActionFilter}>
-                    <SelectTrigger className="w-full md:w-[180px] h-11 rounded-lg border-slate-200">
+                    <SelectTrigger id="select-ledger-filter" className="w-full md:w-[180px] h-11 rounded-lg border-slate-200">
                         <SelectValue placeholder="Filter by Action" />
                     </SelectTrigger>
                     <SelectContent>

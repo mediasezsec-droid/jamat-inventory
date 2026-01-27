@@ -114,6 +114,7 @@ export default function EventDetailsClient({ initialEvent, initialInventory, ini
                         </div>
                         <div className="flex flex-wrap gap-2">
                             <Button
+                                id="btn-event-print"
                                 variant="secondary"
                                 onClick={() => router.push(`/events/${event.id}/print`)}
                                 className="bg-white/10 text-white border-white/20 hover:bg-white/20"
@@ -121,6 +122,7 @@ export default function EventDetailsClient({ initialEvent, initialInventory, ini
                                 <Printer className="mr-2 h-4 w-4" /> Print Form
                             </Button>
                             <Button
+                                id="btn-event-inventory-manage"
                                 onClick={() => router.push(`/events/${event.id}/inventory`)}
                                 className="bg-white text-indigo-700 hover:bg-white/90"
                             >
@@ -135,6 +137,7 @@ export default function EventDetailsClient({ initialEvent, initialInventory, ini
             <div className="flex gap-2 justify-end">
                 <RBACWrapper componentId="btn-event-edit">
                     <Button
+                        id="btn-event-edit"
                         onClick={() => router.push(`/events/${event.id}/edit`)}
                         disabled={isCancelled}
                         className="btn-gradient-primary"
@@ -144,15 +147,15 @@ export default function EventDetailsClient({ initialEvent, initialInventory, ini
                 </RBACWrapper>
 
                 {!isCancelled && (
-                    <RBACWrapper componentId="btn-event-edit">
-                        <Button variant="outline" className="text-amber-600 border-amber-200 hover:bg-amber-50" onClick={handleCancelEvent}>
+                    <RBACWrapper componentId="btn-event-cancel">
+                        <Button id="btn-event-cancel" variant="outline" className="text-amber-600 border-amber-200 hover:bg-amber-50" onClick={handleCancelEvent}>
                             Cancel Event
                         </Button>
                     </RBACWrapper>
                 )}
 
                 <RBACWrapper componentId="btn-event-delete">
-                    <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteEvent(false)}>
+                    <Button id="btn-event-delete" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteEvent(false)}>
                         Delete
                     </Button>
                 </RBACWrapper>

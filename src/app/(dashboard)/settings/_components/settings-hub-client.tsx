@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
     Loader2,
@@ -9,35 +8,28 @@ import {
     Database,
     Settings,
     ChevronRight,
-    Clock,
+    RefreshCw,
     CheckCircle,
     XCircle,
-    RefreshCw,
     Zap,
     Server,
     Users,
     Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-
-interface SettingsHubClientProps {
-    initialBookingWindow: number;
-}
+import { useState, useEffect } from "react";
 
 interface DbHealth {
     database: { status: "connected" | "error"; latencyMs: number; error?: string };
     rtdb: { status: "connected" | "error"; latencyMs: number; error?: string };
 }
 
-export function SettingsHubClient({ initialBookingWindow }: SettingsHubClientProps) {
-    const [bookingWindow, setBookingWindow] = useState<number>(initialBookingWindow);
-    const [isSaving, setIsSaving] = useState(false);
+export function SettingsHubClient() {
     const [dbHealth, setDbHealth] = useState<DbHealth | null>(null);
     const [isCheckingHealth, setIsCheckingHealth] = useState(false);
 
@@ -58,23 +50,6 @@ export function SettingsHubClient({ initialBookingWindow }: SettingsHubClientPro
         checkHealth();
     }, []);
 
-    const handleSaveConfig = async () => {
-        setIsSaving(true);
-        try {
-            const res = await fetch("/api/config", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ bookingWindow: Number(bookingWindow) }),
-            });
-            if (res.ok) toast.success("Configuration saved");
-            else throw new Error("Failed");
-        } catch (error) {
-            toast.error("Failed to save settings");
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
     const getLatencyColor = (ms: number) => {
         if (ms < 100) return "text-emerald-600";
         if (ms < 300) return "text-amber-600";
@@ -82,6 +57,15 @@ export function SettingsHubClient({ initialBookingWindow }: SettingsHubClientPro
     };
 
     const cards = [
+        {
+            title: "General Configuration",
+            desc: "Manage global booking rules and system preferences.",
+            icon: Settings,
+            href: "/settings/config",
+            color: "text-slate-600",
+            bg: "bg-slate-100",
+            gradient: "from-slate-500 to-gray-500"
+        },
         {
             title: "Venues Management",
             desc: "Manage halls and locations available for events.",
@@ -129,6 +113,7 @@ export function SettingsHubClient({ initialBookingWindow }: SettingsHubClientPro
 
             {/* Database Status Card */}
             <Card className="overflow-hidden">
+                {/* ... (Keep existing DB status card) ... */}
                 <div className="h-1.5 bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500"></div>
                 <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
@@ -278,48 +263,6 @@ export function SettingsHubClient({ initialBookingWindow }: SettingsHubClientPro
                         </Link>
                     ))}
                 </div>
-            </div>
-
-            {/* General Configuration Section */}
-            <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
-                    <Settings className="h-5 w-5 text-slate-500" /> General Configuration
-                </h3>
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base">Booking Rules</CardTitle>
-                        <CardDescription>Global rules applied to all event bookings.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
-                            <div className="flex-1 space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
-                                    <Clock className="h-4 w-4 text-slate-400" />
-                                    Conflict Window (Minutes)
-                                </label>
-                                <p className="text-xs text-slate-500">
-                                    Buffer time around an event to detect conflicts during booking.
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <Input
-                                    type="number"
-                                    value={bookingWindow}
-                                    onChange={(e) => setBookingWindow(Number(e.target.value))}
-                                    className="w-32 h-11"
-                                    min={0}
-                                />
-                                <Button
-                                    onClick={handleSaveConfig}
-                                    disabled={isSaving}
-                                    className="h-11 px-6 bg-indigo-600 hover:bg-indigo-700"
-                                >
-                                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
-                                </Button>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
             </div>
         </div>
     );

@@ -741,13 +741,19 @@ export default function NewEventPage() {
                                             </FormItem>
                                         )} />
                                         <FormField control={form.control} name="decorations" render={({ field }) => (
-                                            <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-xl border border-slate-200 bg-white p-4 h-12 mt-8">
+                                            <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-xl border border-slate-200 p-4 hover:bg-slate-50 transition cursor-pointer">
                                                 <FormControl>
                                                     <Checkbox checked={field.value as boolean} onCheckedChange={field.onChange} />
                                                 </FormControl>
-                                                <FormLabel className="font-medium cursor-pointer flex-1 text-slate-900">Decorations Required</FormLabel>
+                                                <FormLabel className="font-medium cursor-pointer flex-1 text-slate-700">Decorations Required</FormLabel>
                                             </FormItem>
                                         )} />
+                                    </div>
+
+                                    <div className="flex justify-end gap-3 pt-4">
+                                        {/* Navigation Buttons for Step 4 */}
+                                        <Button type="button" id="btn-back-step-4" variant="outline" onClick={prevStep} className="h-11 px-6">Back</Button>
+                                        <Button type="button" id="btn-next-step-4" onClick={nextStep} className="h-11 px-8 bg-indigo-600 hover:bg-indigo-700">Next Step <ChevronRight className="ml-2 h-4 w-4" /></Button>
                                     </div>
                                 </div>
                             )}
@@ -912,6 +918,7 @@ export default function NewEventPage() {
                                     </Button>
                                 ) : (
                                     <Button
+                                        id="btn-event-create-submit" // RBAC ID
                                         type="button"
                                         onClick={() => setIsConfirmOpen(true)}
                                         className="h-11 px-8 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg shadow-emerald-200"
@@ -992,6 +999,6 @@ export default function NewEventPage() {
                     </DialogHeader>
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     );
 }

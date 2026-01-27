@@ -152,6 +152,7 @@ export default function EventsPage() {
                 </div>
                 {canManage && (
                     <Button
+                        id="btn-event-create" // RBAC ID
                         onClick={() => router.push("/events/new")}
                         className="btn-gradient-primary shadow-lg h-11 px-6 rounded-xl"
                     >
@@ -205,13 +206,14 @@ export default function EventsPage() {
                 <div className="relative flex-1">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input
+                        id="input-event-search" // RBAC ID
                         placeholder="Search events, halls, or names..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-11 h-12 bg-white border-slate-200 shadow-sm rounded-xl focus-visible:ring-indigo-500"
                     />
                 </div>
-                <Button variant="outline" className="h-12 px-6 rounded-xl border-slate-200 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200">
+                <Button id="btn-event-filter" variant="outline" className="h-12 px-6 rounded-xl border-slate-200 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200">
                     <Filter className="mr-2 h-4 w-4" /> Filters
                 </Button>
             </div>

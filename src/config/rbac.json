@@ -6,9 +6,9 @@
     "/complete-profile": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
 
     "/events": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
-    "/events/new": ["ADMIN", "MANAGER", "STAFF"],
+    "/events/new": ["ADMIN", "MANAGER"],
     "/events/[id]": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
-    "/events/[id]/edit": ["ADMIN", "MANAGER", "STAFF"],
+    "/events/[id]/edit": ["ADMIN", "MANAGER"],
     "/events/[id]/inventory": ["ADMIN", "MANAGER", "STAFF"],
     "/events/[id]/print": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
 
@@ -26,33 +26,72 @@
     "/settings/caterers": ["ADMIN", "MANAGER"],
 
     "/settings/users": ["ADMIN"],
-    "/settings/data": ["ADMIN"],
     "/settings/config": ["ADMIN"],
     "/settings/master-data": ["ADMIN"],
+
+    "/settings/data/export": ["ADMIN"],
+    "/settings/data/restore": ["ADMIN"],
+    "/settings/data/sync": ["ADMIN"],
+    "/settings/data/health": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
+    "/settings/data/reset": ["ADMIN"],
 
     "/users": ["ADMIN"]
   },
   "components": {
-    "btn-event-create": ["ADMIN", "MANAGER", "STAFF"],
-    "btn-event-edit": ["ADMIN", "MANAGER", "STAFF"],
+    "btn-event-create": ["ADMIN", "MANAGER"],
+    "btn-event-edit": ["ADMIN", "MANAGER"],
+    "btn-event-cancel": ["ADMIN", "MANAGER"],
     "btn-event-delete": ["ADMIN"],
+    "btn-event-print": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
+    "btn-event-inventory-manage": ["ADMIN", "MANAGER"],
 
     "btn-inventory-add": ["ADMIN", "MANAGER", "STAFF"],
     "btn-inventory-edit": ["ADMIN", "MANAGER", "STAFF"],
-    "btn-inventory-delete": ["ADMIN", "MANAGER"],
+    "btn-inventory-delete": ["ADMIN", "MANAGER", "STAFF"],
+    "btn-inventory-bulk": ["ADMIN", "MANAGER", "STAFF"],
 
-    "btn-user-create": ["ADMIN"],
+    "btn-user-add": ["ADMIN"],
     "btn-user-edit": ["ADMIN"],
     "btn-user-delete": ["ADMIN"],
 
-    "btn-settings-sync": ["ADMIN"],
-    "btn-settings-restore": ["ADMIN"],
-    "btn-settings-reset": ["ADMIN"],
+    "btn-venue-add": ["ADMIN", "MANAGER"],
+    "btn-venue-edit": ["ADMIN", "MANAGER"],
+    "btn-venue-delete": ["ADMIN", "MANAGER"],
+
+    "btn-caterer-add": ["ADMIN", "MANAGER"],
+    "btn-caterer-edit": ["ADMIN", "MANAGER"],
+    "btn-caterer-delete": ["ADMIN", "MANAGER"],
+
+    "btn-data-restore": ["ADMIN"],
+    "btn-data-reset": ["ADMIN"],
+    "btn-data-sync-neon": ["ADMIN"],
+    "btn-data-sync-firestore": ["ADMIN"],
+    "btn-data-export-master-excel": ["ADMIN"],
+    "btn-data-export-users-excel": ["ADMIN"],
+    "btn-data-export-events-excel": ["ADMIN"],
 
     "nav-settings": ["ADMIN", "MANAGER"],
-    "nav-settings-admin": ["ADMIN"],
+    "nav-settings-users": ["ADMIN"],
+    "nav-settings-data": ["ADMIN"],
     "nav-ledger": ["ADMIN", "MANAGER"],
     "nav-logs": ["ADMIN", "MANAGER"],
-    "nav-users": ["ADMIN"]
+    "nav-users": ["ADMIN"],
+    "nav-item-dashboard": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
+    "nav-item-events": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
+    "nav-item-new-event": ["ADMIN", "MANAGER"],
+    "nav-item-inventory": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
+    "nav-item-ledger": ["ADMIN", "MANAGER"],
+    "nav-item-system-logs": ["ADMIN", "MANAGER"],
+    "nav-item-lost-items": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
+    "nav-item-my-profile": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
+    "nav-item-general-settings": ["ADMIN"],
+    "nav-item-venues": ["ADMIN", "MANAGER"],
+    "nav-item-caterers": ["ADMIN", "MANAGER"],
+    "nav-item-users": ["ADMIN"],
+    "nav-item-export-data": ["ADMIN"],
+    "nav-item-restore-data": ["ADMIN"],
+    "nav-item-sync-status": ["ADMIN"],
+    "nav-item-system-health": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
+    "nav-item-reset-system": ["ADMIN"]
   }
 }

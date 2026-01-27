@@ -257,7 +257,7 @@ export default function EditEventClient() {
                         </CardContent>
                     </Card>
 
-                    <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 text-lg py-6" disabled={isSaving}>
+                    <Button id="btn-event-update-submit" type="submit" className="w-full bg-amber-600 hover:bg-amber-700 text-lg py-6" disabled={isSaving}>
                         {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Update Event"}
                     </Button>
                 </form>

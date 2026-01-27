@@ -120,7 +120,7 @@ export function UsersClient() {
                 </div>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200">
+                        <Button id="btn-user-add" className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200">
                             <UserPlus className="mr-2 h-4 w-4" /> Add User
                         </Button>
                     </DialogTrigger>
@@ -170,7 +170,7 @@ export function UsersClient() {
                                         <FormMessage />
                                     </FormItem>
                                 )} />
-                                <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700">Create User</Button>
+                                <Button id="btn-user-create-submit" type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700">Create User</Button>
                             </form>
                         </Form>
                     </DialogContent>
@@ -182,6 +182,7 @@ export function UsersClient() {
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <Input
+                            id="input-user-search"
                             placeholder="Search users..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}

@@ -170,7 +170,7 @@ export default function AddInventoryPageClient() {
                                     </FormItem>
                                 )}
                             />
-                            <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700" disabled={isLoading}>
+                            <Button id="btn-inventory-create-save" type="submit" className="w-full bg-amber-600 hover:bg-amber-700" disabled={isLoading}>
                                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Add Item"}
                             </Button>
                         </form>

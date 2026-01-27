@@ -116,7 +116,7 @@ export function VenuesClient({ initialVenues }: VenuesClientProps) {
                         <CardTitle>Registered Venues</CardTitle>
                         <CardDescription>List of all available venues.</CardDescription>
                     </div>
-                    <Button onClick={() => handleOpenDialog()} className="bg-blue-600 hover:bg-blue-700">
+                    <Button id="btn-venue-add" onClick={() => handleOpenDialog()} className="bg-blue-600 hover:bg-blue-700">
                         <Plus className="mr-2 h-4 w-4" /> Add Venue
                     </Button>
                 </CardHeader>
@@ -129,10 +129,10 @@ export function VenuesClient({ initialVenues }: VenuesClientProps) {
                                 <div key={venue.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 transition-colors group">
                                     <span className="font-medium text-slate-900">{venue.name}</span>
                                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(venue)}>
+                                        <Button id={`btn-venue-edit-${venue.id}`} variant="ghost" size="icon" onClick={() => handleOpenDialog(venue)}>
                                             <Pencil className="h-4 w-4 text-slate-500 hover:text-blue-600" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" onClick={() => handleDelete(venue.id, venue.name)}>
+                                        <Button id={`btn-venue-delete-${venue.id}`} variant="ghost" size="icon" onClick={() => handleDelete(venue.id, venue.name)}>
                                             <Trash2 className="h-4 w-4 text-slate-500 hover:text-red-600" />
                                         </Button>
                                     </div>
@@ -161,7 +161,7 @@ export function VenuesClient({ initialVenues }: VenuesClientProps) {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                        <Button onClick={handleSave} disabled={isSaving || !venueName.trim()}>
+                        <Button id="btn-venue-create-save" onClick={handleSave} disabled={isSaving || !venueName.trim()}>
                             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Save"}
                         </Button>
                     </DialogFooter>

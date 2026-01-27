@@ -15,7 +15,14 @@ import {
     Users,
     UserCircle,
     Menu,
-    AlertCircle
+    AlertCircle,
+    Building2,
+    ChefHat,
+    FileDown,
+    Upload,
+    RefreshCw,
+    Activity,
+    Trash2
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
@@ -57,19 +64,54 @@ const routes = [
         href: "/lost-items",
     },
     {
-        label: "Settings",
-        icon: Settings,
-        href: "/settings",
-    },
-    {
         label: "My Profile",
         icon: UserCircle,
         href: "/profile",
     },
     {
+        label: "General Settings",
+        icon: Settings,
+        href: "/settings/config",
+    },
+    {
+        label: "Venues",
+        icon: Building2,
+        href: "/settings/venues",
+    },
+    {
+        label: "Caterers",
+        icon: ChefHat,
+        href: "/settings/caterers",
+    },
+    {
         label: "Users",
         icon: Users,
-        href: "/users",
+        href: "/settings/users",
+    },
+    {
+        label: "Export Data",
+        icon: FileDown,
+        href: "/settings/data/export",
+    },
+    {
+        label: "Restore Data",
+        icon: Upload,
+        href: "/settings/data/restore",
+    },
+    {
+        label: "Sync Status",
+        icon: RefreshCw,
+        href: "/settings/data/sync",
+    },
+    {
+        label: "System Health",
+        icon: Activity,
+        href: "/settings/data/health",
+    },
+    {
+        label: "Reset System",
+        icon: Trash2,
+        href: "/settings/data/reset",
     },
 ];
 
@@ -162,6 +204,7 @@ export function Sidebar({ role }: SidebarProps) {
                     return (
                         <Link
                             key={route.href}
+                            id={`nav-item-${route.label.toLowerCase().replace(/\s+/g, "-")}`}
                             href={route.href}
                             className={cn(
                                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group font-medium",

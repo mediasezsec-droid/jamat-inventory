@@ -11,14 +11,5 @@ export default async function SettingsHubPage() {
         redirect("/unauthorized");
     }
 
-    let bookingWindow = 60;
-    try {
-        const snapshot = await rtdb.ref("config/bookingWindow").once("value");
-        const val = snapshot.val();
-        if (typeof val === "number") bookingWindow = val;
-    } catch (error) {
-        console.error("Failed to fetch booking config:", error);
-    }
-
-    return <SettingsHubClient initialBookingWindow={bookingWindow} />;
+    return <SettingsHubClient />;
 }

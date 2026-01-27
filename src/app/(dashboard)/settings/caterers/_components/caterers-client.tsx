@@ -115,7 +115,7 @@ export function CaterersClient({ initialCaterers }: CaterersClientProps) {
                         <CardTitle>Registered Caterers</CardTitle>
                         <CardDescription>List of available caterers.</CardDescription>
                     </div>
-                    <Button onClick={() => handleOpenDialog()} className="bg-amber-600 hover:bg-amber-700">
+                    <Button id="btn-caterer-add" onClick={() => handleOpenDialog()} className="bg-amber-600 hover:bg-amber-700">
                         <Plus className="mr-2 h-4 w-4" /> Add Caterer
                     </Button>
                 </CardHeader>
@@ -131,10 +131,10 @@ export function CaterersClient({ initialCaterers }: CaterersClientProps) {
                                         <p className="text-sm text-slate-500">{caterer.phone || "No phone number"}</p>
                                     </div>
                                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(caterer)}>
+                                        <Button id={`btn-caterer-edit-${caterer.id}`} variant="ghost" size="icon" onClick={() => handleOpenDialog(caterer)}>
                                             <Pencil className="h-4 w-4 text-slate-500 hover:text-blue-600" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" onClick={() => handleDelete(caterer.id, caterer.name)}>
+                                        <Button id={`btn-caterer-delete-${caterer.id}`} variant="ghost" size="icon" onClick={() => handleDelete(caterer.id, caterer.name)}>
                                             <Trash2 className="h-4 w-4 text-slate-500 hover:text-red-600" />
                                         </Button>
                                     </div>
@@ -170,7 +170,7 @@ export function CaterersClient({ initialCaterers }: CaterersClientProps) {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                        <Button onClick={handleSave} disabled={isSaving || !formData.name.trim()}>
+                        <Button id="btn-caterer-create-save" onClick={handleSave} disabled={isSaving || !formData.name.trim()}>
                             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Save"}
                         </Button>
                     </DialogFooter>

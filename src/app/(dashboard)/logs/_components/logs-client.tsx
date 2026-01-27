@@ -166,6 +166,7 @@ export function LogsClient() {
                 description="Real-time activity log of all system actions and events."
                 actions={
                     <Button
+                        id="btn-log-refresh"
                         variant="outline"
                         onClick={() => fetchLogs(true)}
                         disabled={isRefreshing}
@@ -182,6 +183,7 @@ export function LogsClient() {
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input
+                        id="input-log-search"
                         placeholder="Search logs by user, action, or details..."
                         className="pl-9 h-11 rounded-lg bg-white border-slate-200"
                         value={searchQuery}
@@ -189,7 +191,7 @@ export function LogsClient() {
                     />
                 </div>
                 <Select value={actionFilter} onValueChange={setActionFilter}>
-                    <SelectTrigger className="w-full md:w-[180px] h-11 rounded-lg border-slate-200">
+                    <SelectTrigger id="select-log-filter" className="w-full md:w-[180px] h-11 rounded-lg border-slate-200">
                         <SelectValue placeholder="Filter by Action" />
                     </SelectTrigger>
                     <SelectContent>

@@ -140,7 +140,7 @@ export default function EditInventoryClient({ initialItem }: EditInventoryClient
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={isLoading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                            <Button id="btn-inventory-update-save" type="submit" disabled={isLoading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
                                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                                 Save Changes
                             </Button>

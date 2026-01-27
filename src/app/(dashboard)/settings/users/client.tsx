@@ -168,7 +168,7 @@ export default function UsersPage() {
                     isAdmin && (
                         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                             <DialogTrigger asChild>
-                                <Button className="bg-amber-600 hover:bg-amber-700 shadow-sm">
+                                <Button id="btn-user-add" className="bg-amber-600 hover:bg-amber-700 shadow-sm">
                                     <Plus className="mr-2 h-4 w-4" /> Add User
                                 </Button>
                             </DialogTrigger>
@@ -234,7 +234,7 @@ export default function UsersPage() {
                                                 </FormItem>
                                             )}
                                         />
-                                        <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700">Create User</Button>
+                                        <Button id="btn-user-create-save" type="submit" className="w-full bg-amber-600 hover:bg-amber-700">Create User</Button>
                                     </form>
                                 </Form>
                             </DialogContent>
@@ -270,6 +270,7 @@ export default function UsersPage() {
                                     {isAdmin && (
                                         <div className="flex gap-1">
                                             <Button
+                                                id={`btn-user-edit-${user.uid}`}
                                                 variant="ghost"
                                                 size="sm"
                                                 className="text-slate-400 hover:text-amber-600 hover:bg-amber-50"
@@ -278,6 +279,7 @@ export default function UsersPage() {
                                                 <UserIcon className="h-4 w-4" />
                                             </Button>
                                             <Button
+                                                id={`btn-user-delete-${user.uid}`}
                                                 variant="ghost"
                                                 size="sm"
                                                 className="text-slate-400 hover:text-red-600 hover:bg-red-50"
@@ -316,6 +318,7 @@ export default function UsersPage() {
                     </DrawerHeader>
                     <DrawerFooter className="flex flex-col gap-3 mt-4">
                         <Button
+                            id="btn-user-delete-confirm"
                             onClick={handleDelete}
                             className="w-full h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white"
                         >
@@ -371,7 +374,7 @@ function EditUserForm({ user, onSubmit }: { user: User, onSubmit: (values: any) 
                     placeholder="Leave blank to keep current"
                 />
             </div>
-            <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700">Update User</Button>
+            <Button id="btn-user-update-save" type="submit" className="w-full bg-amber-600 hover:bg-amber-700">Update User</Button>
         </form>
     );
 }
