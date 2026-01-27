@@ -24,10 +24,7 @@ function matchRoute(pattern: string, pathname: string): boolean {
 
 function getAllowedRoles(pathname: string): string[] | null {
   // 1. Check strict page rules from rbac.json
-  // We prioritize specific matches over wildcard/general ones if we had them.
-  // rbac.json "pages" keys are unique.
-
-  // Sort patterns by length descending to match most specific first (optional but good practice)
+  // Sort patterns by length descending to match most specific first
   const patterns = Object.keys(rbacConfig.pages).sort(
     (a, b) => b.length - a.length,
   );
@@ -39,15 +36,6 @@ function getAllowedRoles(pathname: string): string[] | null {
     }
   }
 
-  // 2. If no direct match found, apply strict default or broad module rules?
-  // Current requirement: "Control from single file".
-  // rbac-server.ts says "If page is not in config, DENY".
-  // So middleware should also DENY if not matched?
-  // OR we can allow known safe public routes (handled separately) and block everything else.
-  // BUT what about /api routes? This middleware intercepts them too.
-
-  // Let's assume strict compliance with rbac.json. If it's a "Page" and not in JSON, it's unknown/blocked or Admin only.
-  // Let's return null to signify "No Rule Found".
   return null;
 }
 
@@ -86,29 +74,15 @@ export default auth((req) => {
   // Check role-based access
   const allowedRoles = getAllowedRoles(pathname);
 
-  // If no rule found:
-  // Option A: Allow (dangerous)
-  // Option B: Block (Strict) - Best for security
-  // Option C: Admin Only fallback
   if (allowedRoles === null) {
-    // If it's an API route not explicitly listed in rbac.json pages (rbac.json pages usually implies UI routes),
-    // we might block legitimate API calls unless we allow ALL APIs and rely on per-route checks.
-    // However, user said "Strict Protection".
-    // rbac.json "pages" keys might not cover "/api/events/..." patterns.
-    // STRATEGY:
-    // - UI Routes: Must be whitelisted.
-    // - API Routes: Allow to pass through middleware, rely on inner implementation?
-    //   OR enforcing them here too?
-    //   Realistically, listing all API routes in rbac.json pages is tedious.
-    //   Let's allow API routes to pass middleware RBAC check (isAuthenticated is already checked)
-    //   and rely on the per-route `auth()` and `role` checks we added in `route.ts` files (which we just audited!).
+    // Unknown route logic
 
+    // Allow API routes to pass through (rely on handler security)
     if (pathname.startsWith("/api/")) {
       return NextResponse.next();
     }
 
-    // For UI pages not in config -> Block or Admin Only?
-    // Let's default to Admin Only to be safe.
+    // Default to ADMIN only for unknown UI routes
     if (role !== "ADMIN") {
       console.log(
         `[Middleware] Blocking access to ${pathname} for ${role} (No Rule)`,
