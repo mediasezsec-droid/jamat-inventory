@@ -102,6 +102,11 @@ model Event {
   menu                String?
   
   status              EventStatus    @default(BOOKED)
+  
+  // New Fields for Public/Private Logic
+  eventType           EventType      @default(PRIVATE)
+  hallCounts          Json?          // Stores { "Hall A": 50, "Hall B": 30 }
+  
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
   
@@ -109,6 +114,11 @@ model Event {
   createdById         String?
 
   @@map("events")
+}
+
+enum EventType {
+  PUBLIC
+  PRIVATE
 }
 
 model Caterer {

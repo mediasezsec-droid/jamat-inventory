@@ -677,9 +677,9 @@ export const generateMiqaatBookingForm = async (
 
   // Lagat Rows Logic
   const lagatLabels = [
-    { label: "₹ Per Thaal", value: "" },
-    { label: "₹ Sarkari", value: "" },
-    { label: "₹ Kitchen", value: "" },
+    { label: "Rs. Per Thaal", value: "" },
+    { label: "Rs. Sarkari", value: "" },
+    { label: "Rs. Kitchen", value: "" },
     { label: "Decoration", value: event.decorations ? "Yes" : "No" },
     { label: "Other", value: "" },
   ];

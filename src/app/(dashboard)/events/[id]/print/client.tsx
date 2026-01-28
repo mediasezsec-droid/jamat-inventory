@@ -124,7 +124,7 @@ export default function EventPrintPage() {
                                             Hijri: {hijriDate}
                                         </p>
                                         {hijriDateAr && (
-                                            <p className="text-sm font-arabic text-indigo-800 mt-1 text-right" dir="rtl">
+                                            <p className="text-lg font-arabic text-indigo-800 mt-1 text-right" dir="rtl">
                                                 {hijriDateAr}
                                             </p>
                                         )}

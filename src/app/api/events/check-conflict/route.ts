@@ -71,16 +71,13 @@ export async function POST(req: Request) {
 
     const events = await prisma.event.findMany({
       where: {
-        // Overlapping day check is tricky with strict dates, but "occasionDate" stores the date part usually.
-        // If occasionDate is stored as DateTime, we range check it.
         occasionDate: {
           gte: queryStart,
           lte: queryEnd,
         },
         status: { not: "CANCELLED" },
-        // Note: occasionDate might just be 00:00:00 of the day.
-        // The TIME is stored in occasionTime string.
-        // So we rely on fetching all events for the day and parsing strings in JS loop below.
+        // Exclude current event if updating
+        ...(body.excludeEventId ? { id: { not: body.excludeEventId } } : {}),
       },
     });
 

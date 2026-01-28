@@ -57,6 +57,9 @@ export interface Event {
 
   menu: string;
 
+  eventType?: "PUBLIC" | "PRIVATE";
+  hallCounts?: Record<string, number>;
+
   createdAt: string;
   updatedAt?: string;
   createdBy?: string; // User UID

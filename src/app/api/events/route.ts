@@ -125,6 +125,8 @@ export async function POST(req: Request) {
       decorations,
       gasCount,
       menu,
+      eventType,
+      hallCounts,
     } = body;
 
     // Basic validation
@@ -170,6 +172,8 @@ export async function POST(req: Request) {
         decorations: Boolean(decorations),
         gasCount: gasCount ? Number(gasCount) : null,
         menu: menu || null,
+        eventType: eventType || "PRIVATE",
+        hallCounts: hallCounts || null,
         createdById: user.id || null,
       },
     });

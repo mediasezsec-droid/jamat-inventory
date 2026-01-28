@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { useRouter } from "next/navigation";
 import { Loader2, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getMisriDate } from "@/lib/misri-calendar";
 
 const locales = {
     "en-US": enUS,
@@ -53,24 +54,33 @@ export default function CalendarClient() {
                         // But we need a duration. Since schema might be simple, let's default to specific logic
                         // If we don't have end time, default to 4 hours?
 
-                        // Parse occasionDate + occasionTime
-                        const startDateTimeString = `${event.occasionDate.split("T")[0]} ${event.occasionTime}`;
-                        const startDate = new Date(startDateTimeString); // This simplistic parsing might be flaky depending on time format
+                        // Robust Parsing Logic
+                        // 1. Manually parse YYYY-MM-DD from the date string part
+                        const datePart = event.occasionDate.split("T")[0];
+                        const [year, month, day] = datePart.split("-").map(Number);
 
-                        // Robust parsing fallback (since event.occasionTime might be "08:00 PM")
-                        let parsedStart = new Date(event.occasionDate); // Base date
+                        // 2. Parse HH:mm from time string
+                        const [hours, minutes] = event.occasionTime.split(":").map(Number);
 
-                        // Simple check if date is valid
-                        if (isNaN(parsedStart.getTime())) parsedStart = new Date();
+                        // 3. Create Local Date explicitly (Month is 0-indexed)
+                        // This consistently creates a local date object for the given components
+                        let start = new Date(year, month - 1, day, hours, minutes, 0, 0);
 
-                        // Add 4 hours for end date effectively
-                        const parsedEnd = new Date(parsedStart.getTime() + (4 * 60 * 60 * 1000));
+                        // Fallback validation
+                        if (isNaN(start.getTime())) {
+                            start = new Date(); // Safety fallback
+                        }
+
+                        // 4. End Date (Reduce to 3 hours to avoid crossing midnight)
+                        const end = new Date(start);
+                        end.setHours(start.getHours() + 3);
 
                         return {
                             id: event.id,
                             title: `${event.name} (${event.hall})`,
-                            start: parsedStart,
-                            end: parsedEnd,
+                            start: start,
+                            end: end,
+                            allDay: false, // Explicitly false to force time grid
                             status: event.status || "BOOKED", // Fallback for undefined
                             resource: event
                         };
@@ -152,6 +162,26 @@ export default function CalendarClient() {
                             eventPropGetter={eventStyleGetter}
                             views={[Views.MONTH, Views.WEEK, Views.DAY]}
                             popup
+                            components={{
+                                month: {
+                                    dateHeader: ({ date, label }) => {
+                                        const hijri = getMisriDate(date);
+                                        return (
+                                            <div className="flex justify-between items-start px-2 pt-2">
+                                                <div className="flex flex-col items-start">
+                                                    <span className="text-lg text-emerald-700 font-arabic font-bold leading-none">
+                                                        {hijri.dayAr}
+                                                    </span>
+                                                    <span className="text-[10px] text-emerald-600 font-arabic font-medium leading-tight">
+                                                        {hijri.monthNameAr}
+                                                    </span>
+                                                </div>
+                                                <span className="text-sm font-semibold text-slate-700">{label}</span>
+                                            </div>
+                                        );
+                                    }
+                                }
+                            }}
                         />
                     </div>
                 )}

@@ -33,6 +33,7 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -75,7 +76,9 @@ const formSchema = z.object({
     catererPhone: z.string().default(""),
 
     // Step 3: Essentials
+    eventType: z.enum(["PUBLIC", "PRIVATE"]).default("PRIVATE"),
     thaalCount: z.coerce.number().min(0),
+    hallCounts: z.record(z.string(), z.number()).optional(), // { "Hall A": 50 }
     sarkariThaalSet: z.coerce.number().min(0),
     bhaiSaabIzzan: z.boolean().default(false),
     benSaabIzzan: z.boolean().default(false),
@@ -219,6 +222,8 @@ export default function NewEventPage() {
             thaalForDevri: false,
             paat: false,
             masjidLight: false,
+            eventType: "PRIVATE",
+            hallCounts: {},
             menu: "",
             acStartTime: "",
             partyTime: "",
@@ -559,21 +564,22 @@ export default function NewEventPage() {
                                                 <FormMessage />
                                             </FormItem>
                                         )} />
-                                        {/* Hijri Date Display */}
                                         <div className="space-y-2">
-                                            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-500 flex items-center gap-2">
-                                                Hijri Date (Auto-detected)
-                                                {isLoadingHijri && <Loader2 className="h-3 w-3 animate-spin text-emerald-600" />}
-                                            </label>
-                                            <div className="relative">
-                                                <Input
-                                                    disabled
-                                                    value={isLoadingHijri ? "Fetching date..." : (hijriDate || "Select a date...")}
-                                                    className={cn(
-                                                        "bg-slate-50 font-medium text-emerald-700 font-arabic transition-opacity",
-                                                        isLoadingHijri && "opacity-70"
-                                                    )}
-                                                />
+                                            <FormLabel className="text-slate-500">Hijri Date</FormLabel>
+                                            <div className="relative h-12 flex items-center px-3 border border-slate-200 rounded-md bg-slate-50 gap-2">
+                                                {isLoadingHijri ? (
+                                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                        <Loader2 className="h-3 w-3 animate-spin" /> Calculating...
+                                                    </div>
+                                                ) : hijriDate ? (
+                                                    <div className="flex items-center gap-2 w-full justify-end">
+                                                        <span className="text-sm font-medium text-slate-700">{hijriDate.split("/")[0]}</span>
+                                                        <span className="text-sm text-slate-400">/</span>
+                                                        <span className="text-xl font-arabic text-emerald-700 pb-1">{hijriDate.split("/")[1]}</span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-sm text-muted-foreground">Select a date</span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -690,39 +696,123 @@ export default function NewEventPage() {
                             {/* Step 3: Logistics & Menu */}
                             {step === 3 && (
                                 <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                        <FormField control={form.control} name="thaalCount" render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="text-center block mb-2">No. Of Thaal</FormLabel>
-                                                <div className="flex items-center justify-center gap-1">
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className="h-12 w-12 rounded-xl border-slate-200 hover:bg-indigo-50 hover:border-indigo-200"
-                                                        onClick={() => field.onChange(Math.max(0, Number(field.value) - 1))}
-                                                    >
-                                                        <span className="text-xl font-bold">−</span>
-                                                    </Button>
-                                                    <Input
-                                                        type="number"
-                                                        value={field.value}
-                                                        onChange={(e) => field.onChange(Math.max(0, Number(e.target.value) || 0))}
-                                                        className="w-20 h-12 text-center text-xl font-bold bg-indigo-50 border-indigo-200 text-indigo-700 rounded-xl [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className="h-12 w-12 rounded-xl border-slate-200 hover:bg-indigo-50 hover:border-indigo-200"
-                                                        onClick={() => field.onChange(Number(field.value) + 1)}
-                                                    >
-                                                        <span className="text-xl font-bold">+</span>
-                                                    </Button>
+                                    {/* Event Type Selection */}
+                                    <FormField control={form.control} name="eventType" render={({ field }) => (
+                                        <FormItem className="space-y-3">
+                                            <FormLabel>Event Type</FormLabel>
+                                            <FormControl>
+                                                <RadioGroup
+                                                    onValueChange={(val: "PUBLIC" | "PRIVATE") => {
+                                                        field.onChange(val);
+                                                        // Reset counts when switching
+                                                        if (val === "PRIVATE") {
+                                                            form.setValue("hallCounts", {});
+                                                            // Global count remains valid
+                                                        } else {
+                                                            form.setValue("thaalCount", 0); // Reset global, use hall counts
+                                                        }
+                                                    }}
+                                                    value={field.value}
+                                                    className="flex flex-col space-y-1"
+                                                >
+                                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                                        <FormControl>
+                                                            <RadioGroupItem value="PRIVATE" />
+                                                        </FormControl>
+                                                        <FormLabel className="font-normal">
+                                                            Private (Standard Thaal Count)
+                                                        </FormLabel>
+                                                    </FormItem>
+                                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                                        <FormControl>
+                                                            <RadioGroupItem value="PUBLIC" />
+                                                        </FormControl>
+                                                        <FormLabel className="font-normal">
+                                                            Public (Segregated Hall Counts)
+                                                        </FormLabel>
+                                                    </FormItem>
+                                                </RadioGroup>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+
+                                    {/* Conditional Thaal Counts */}
+                                    {form.watch("eventType") === "PUBLIC" ? (
+                                        <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
+                                            <h3 className="font-semibold text-sm">Hall-wise Thaal Distribution</h3>
+                                            {form.watch("hall").length > 0 ? (
+                                                Array.isArray(form.watch("hall")) ? form.watch("hall").map((h: string) => (
+                                                    <FormItem key={h}>
+                                                        <FormLabel>{h}</FormLabel>
+                                                        <FormControl>
+                                                            <Input
+                                                                type="number"
+                                                                placeholder="Count"
+                                                                className="bg-white"
+                                                                onChange={(e) => {
+                                                                    const count = Number(e.target.value) || 0;
+                                                                    const currentMap = form.getValues("hallCounts") || {};
+                                                                    const newMap = { ...currentMap, [h]: count };
+                                                                    form.setValue("hallCounts", newMap);
+
+                                                                    // Update total automatically
+                                                                    const total = Object.values(newMap).reduce((a, b) => a + b, 0);
+                                                                    form.setValue("thaalCount", total);
+                                                                }}
+                                                            />
+                                                        </FormControl>
+                                                    </FormItem>
+                                                )) : <p>Select halls first.</p>
+                                            ) : (
+                                                <div className="text-sm text-yellow-600 flex items-center gap-2">
+                                                    <AlertCircle className="w-4 h-4" /> Please select halls in Step 2 first.
                                                 </div>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )} />
+                                            )}
+                                            <div className="text-right text-sm font-bold pt-2">
+                                                Total Thaals: {form.watch("thaalCount")}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                            <FormField control={form.control} name="thaalCount" render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-center block mb-2">No. Of Thaal</FormLabel>
+                                                    <div className="flex items-center justify-center gap-1">
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="icon"
+                                                            className="h-12 w-12 rounded-xl border-slate-200 hover:bg-indigo-50 hover:border-indigo-200"
+                                                            onClick={() => field.onChange(Math.max(0, Number(field.value) - 1))}
+                                                        >
+                                                            <span className="text-xl font-bold">−</span>
+                                                        </Button>
+                                                        <Input
+                                                            type="number"
+                                                            value={field.value}
+                                                            onChange={(e) => field.onChange(Math.max(0, Number(e.target.value) || 0))}
+                                                            className="w-20 h-12 text-center text-xl font-bold bg-indigo-50 border-indigo-200 text-indigo-700 rounded-xl [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                        />
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="icon"
+                                                            className="h-12 w-12 rounded-xl border-slate-200 hover:bg-indigo-50 hover:border-indigo-200"
+                                                            onClick={() => field.onChange(Number(field.value) + 1)}
+                                                        >
+                                                            <span className="text-xl font-bold">+</span>
+                                                        </Button>
+                                                    </div>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            {/* Remaining fields continue... */}
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                        {/* Original Thaal Count slot occupied above, so we continue with others */}
                                         <FormField control={form.control} name="sarkariThaalSet" render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel className="text-center block mb-2">Sarkari Sets</FormLabel>
@@ -874,8 +964,33 @@ export default function NewEventPage() {
                                         )} />
                                         <FormField control={form.control} name="gasCount" render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Gas Count</FormLabel>
-                                                <FormControl><Input type="number" {...field} className="h-12 border-slate-200 bg-white" /></FormControl>
+                                                <FormLabel className="text-center block mb-2">Gas Count</FormLabel>
+                                                <div className="flex items-center justify-center gap-1">
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="h-12 w-12 rounded-xl border-slate-200 hover:bg-slate-50"
+                                                        onClick={() => field.onChange(Math.max(0, Number(field.value) - 1))}
+                                                    >
+                                                        <span className="text-xl font-bold">−</span>
+                                                    </Button>
+                                                    <Input
+                                                        type="number"
+                                                        value={field.value}
+                                                        onChange={(e) => field.onChange(Math.max(0, Number(e.target.value) || 0))}
+                                                        className="w-20 h-12 text-center text-xl font-bold bg-white border-slate-200 rounded-xl [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    />
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="h-12 w-12 rounded-xl border-slate-200 hover:bg-slate-50"
+                                                        onClick={() => field.onChange(Number(field.value) + 1)}
+                                                    >
+                                                        <span className="text-xl font-bold">+</span>
+                                                    </Button>
+                                                </div>
                                                 <FormMessage />
                                             </FormItem>
                                         )} />
@@ -889,11 +1004,7 @@ export default function NewEventPage() {
                                         )} />
                                     </div>
 
-                                    <div className="flex justify-end gap-3 pt-4">
-                                        {/* Navigation Buttons for Step 4 */}
-                                        <Button type="button" id="btn-back-step-4" variant="outline" onClick={prevStep} className="h-11 px-6">Back</Button>
-                                        <Button type="button" id="btn-next-step-4" onClick={nextStep} className="h-11 px-8 bg-indigo-600 hover:bg-indigo-700">Next Step <ChevronRight className="ml-2 h-4 w-4" /></Button>
-                                    </div>
+
                                 </div>
                             )}
 

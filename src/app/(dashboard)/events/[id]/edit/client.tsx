@@ -6,8 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
     Form,
     FormControl,
@@ -48,6 +49,8 @@ const formSchema = z.object({
     }),
     catererName: z.string().default(""),
     catererPhone: z.string().default(""),
+    eventType: z.enum(["PUBLIC", "PRIVATE"]).default("PRIVATE"),
+    hallCounts: z.record(z.string(), z.number()).optional(),
     thaalCount: z.coerce.number().min(0),
     sarkariThaalSet: z.coerce.number().min(0),
     bhaiSaabIzzan: z.boolean().default(false),
@@ -180,6 +183,8 @@ export default function EditEventClient() {
                     paat: event.paat,
                     masjidLight: event.masjidLight,
                     menu: event.menu,
+                    eventType: (event.eventType as "PUBLIC" | "PRIVATE") || "PRIVATE",
+                    hallCounts: (event.hallCounts as Record<string, number>) || {},
                     acStartTime: event.acStartTime || "",
                     partyTime: event.partyTime || "",
                     decorations: event.decorations || false,
@@ -324,21 +329,22 @@ export default function EditEventClient() {
                                         </Popover>
                                         <FormMessage /></FormItem>
                                 )} />
-                                {/* Hijri Date Display */}
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-500 flex items-center gap-2">
-                                        Hijri Date (Auto-detected)
-                                        {isLoadingHijri && <Loader2 className="h-3 w-3 animate-spin text-emerald-600" />}
-                                    </label>
-                                    <div className="relative">
-                                        <Input
-                                            disabled
-                                            value={isLoadingHijri ? "Fetching date..." : (hijriDate || "Select a date...")}
-                                            className={cn(
-                                                "bg-slate-50 font-medium text-emerald-700 font-arabic transition-opacity",
-                                                isLoadingHijri && "opacity-70"
-                                            )}
-                                        />
+                                    <FormLabel className="text-slate-500">Hijri Date</FormLabel>
+                                    <div className="relative h-12 flex items-center px-3 border border-slate-200 rounded-md bg-slate-50 gap-2">
+                                        {isLoadingHijri ? (
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                <Loader2 className="h-3 w-3 animate-spin" /> Calculating...
+                                            </div>
+                                        ) : hijriDate ? (
+                                            <div className="flex items-center gap-2 w-full justify-end">
+                                                <span className="text-sm font-medium text-slate-700">{hijriDate.split("/")[0]}</span>
+                                                <span className="text-sm text-slate-400">/</span>
+                                                <span className="text-xl font-arabic text-emerald-700 pb-1">{hijriDate.split("/")[1]}</span>
+                                            </div>
+                                        ) : (
+                                            <span className="text-sm text-muted-foreground">Select a date</span>
+                                        )}
                                     </div>
                                 </div>
                                 <FormField control={form.control} name="occasionTime" render={({ field }) => (
@@ -451,11 +457,83 @@ export default function EditEventClient() {
                     <Card className="border-0 shadow-sm">
                         <CardHeader className="bg-slate-50 rounded-t-lg"><CardTitle>Requirements</CardTitle></CardHeader>
                         <CardContent className="p-6">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                <FormField control={form.control} name="thaalCount" render={({ field }) => (<FormItem><FormLabel>Thaal Count</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
-                                <FormField control={form.control} name="sarkariThaalSet" render={({ field }) => (<FormItem><FormLabel>Sarkari Sets</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
-                                <FormField control={form.control} name="extraChilamchiLota" render={({ field }) => (<FormItem><FormLabel>Ex. Chilamchi</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
-                                <FormField control={form.control} name="tablesAndChairs" render={({ field }) => (<FormItem><FormLabel>Tables/Chairs</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
+                            <div className="space-y-6">
+                                {/* Event Type Selection */}
+                                <FormField control={form.control} name="eventType" render={({ field }) => (
+                                    <FormItem className="space-y-3">
+                                        <FormLabel>Event Type</FormLabel>
+                                        <FormControl>
+                                            <RadioGroup
+                                                onValueChange={(val: "PUBLIC" | "PRIVATE") => {
+                                                    field.onChange(val);
+                                                    if (val === "PRIVATE") {
+                                                        form.setValue("hallCounts", {});
+                                                    } else {
+                                                        form.setValue("thaalCount", 0);
+                                                    }
+                                                }}
+                                                value={field.value}
+                                                className="flex flex-row gap-6"
+                                            >
+                                                <FormItem className="flex items-center space-x-3 space-y-0">
+                                                    <FormControl><RadioGroupItem value="PRIVATE" /></FormControl>
+                                                    <FormLabel className="font-normal">Private (Standard)</FormLabel>
+                                                </FormItem>
+                                                <FormItem className="flex items-center space-x-3 space-y-0">
+                                                    <FormControl><RadioGroupItem value="PUBLIC" /></FormControl>
+                                                    <FormLabel className="font-normal">Public (Segregated)</FormLabel>
+                                                </FormItem>
+                                            </RadioGroup>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+
+                                {form.watch("eventType") === "PUBLIC" ? (
+                                    <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
+                                        <h3 className="font-semibold text-sm">Hall-wise Thaal Distribution</h3>
+                                        {form.watch("hall").length > 0 ? (
+                                            Array.isArray(form.watch("hall")) ? form.watch("hall").map((h: string) => (
+                                                <FormItem key={h}>
+                                                    <FormLabel>{h}</FormLabel>
+                                                    <FormControl>
+                                                        <Input
+                                                            type="number"
+                                                            placeholder="Count"
+                                                            className="bg-white"
+                                                            defaultValue={form.getValues("hallCounts")?.[h] || ""}
+                                                            onChange={(e) => {
+                                                                const count = Number(e.target.value) || 0;
+                                                                const currentMap = form.getValues("hallCounts") || {};
+                                                                const newMap = { ...currentMap, [h]: count };
+                                                                form.setValue("hallCounts", newMap);
+                                                                const total = Object.values(newMap).reduce((a, b) => a + b, 0);
+                                                                form.setValue("thaalCount", total);
+                                                            }}
+                                                        />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )) : <p>Select halls first.</p>
+                                        ) : (
+                                            <div className="text-sm text-yellow-600 flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4" /> Please select halls above.
+                                            </div>
+                                        )}
+                                        <div className="text-right text-sm font-bold pt-2">
+                                            Total Thaals: {form.watch("thaalCount")}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <FormField control={form.control} name="thaalCount" render={({ field }) => (
+                                        <FormItem><FormLabel>Thaal Count</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                                    )} />
+                                )}
+
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                    <FormField control={form.control} name="sarkariThaalSet" render={({ field }) => (<FormItem><FormLabel>Sarkari Sets</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
+                                    <FormField control={form.control} name="extraChilamchiLota" render={({ field }) => (<FormItem><FormLabel>Ex. Chilamchi</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
+                                    <FormField control={form.control} name="tablesAndChairs" render={({ field }) => (<FormItem><FormLabel>Tables/Chairs</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
+                                </div>
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6">
                                 <FormField control={form.control} name="mic" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel>Mic</FormLabel></FormItem>)} />
