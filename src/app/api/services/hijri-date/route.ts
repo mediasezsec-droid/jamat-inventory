@@ -28,16 +28,25 @@ export async function GET(request: Request) {
   }
 
   try {
-    const hijri = getMisriDate(date);
+    const hijri = await fetch(
+      "https://hijricalendar.alaqmar.dev/api/hijri?gdate=" + date,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    const data = await hijri.json();
 
     return NextResponse.json({
-      hijri: hijri.formattedEn,
-      arabic: hijri.formattedAr,
+      hijri: data.formattedEn,
+      arabic: data.formattedAr,
     });
   } catch (error) {
-    console.error("Hijri Calculation Error:", error);
+    console.error("Hijri Date Error:", error);
     return NextResponse.json(
-      { error: "Failed to calculate Hijri date" },
+      { error: "Failed to load Hijri date" },
       { status: 500 },
     );
   }
