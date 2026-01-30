@@ -57,7 +57,9 @@ export default auth((req) => {
   if (
     isPublicRoute ||
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/static")
+    pathname.startsWith("/static") ||
+    // Allow static files (images, fonts, etc.)
+    /\.(png|jpg|jpeg|gif|webp|svg|ttf|woff|woff2)$/i.test(pathname)
   ) {
     return NextResponse.next();
   }

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function DataManagementPage() {
     const hasAccess = await checkPageAccess("/settings/data");
     if (!hasAccess) {
-        redirect("/");
+        redirect("/unauthorized");
     }
 
     return <DataManagementPageClient />;

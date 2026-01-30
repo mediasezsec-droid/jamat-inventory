@@ -8,6 +8,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Event } from "@/types";
 import { Loader2 } from "lucide-react";
 import { getMisriDate } from "@/lib/misri-calendar";
+import { getISTDate } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 const locales = {
@@ -58,11 +59,15 @@ export function SharedCalendar({ onDateSelect, onEventSelect, embedded = false, 
                     const data: Event[] = await res.json();
 
                     const calendarEvents = data.map(event => {
-                        const datePart = event.occasionDate.split("T")[0];
-                        const [year, month, day] = datePart.split("-").map(Number);
+                        // Use getISTDate to parse the occasionDate string into a local Date object representing the IST day.
+                        // The time components from occasionTime are then applied to this base date.
+                        const dateObj = getISTDate(event.occasionDate);
+                        const year = dateObj.getFullYear();
+                        const month = dateObj.getMonth();
+                        const day = dateObj.getDate();
                         const [hours, minutes] = event.occasionTime.split(":").map(Number);
 
-                        let start = new Date(year, month - 1, day, hours, minutes, 0, 0);
+                        let start = new Date(year, month, day, hours, minutes, 0, 0);
                         if (isNaN(start.getTime())) start = new Date(); // Fallback
 
                         const end = new Date(start);

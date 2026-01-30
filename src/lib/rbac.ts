@@ -2,55 +2,9 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { Role } from "@/types";
+import rbacConfig from "@/config/rbac.json";
 
-// Define page access rules
-// ADMIN: Can do everything
-// MANAGER: Can view and create events, view logs, ledger
-// STAFF: Can only access inventory and lost items
-// WATCHER: Can view inventory and events (no edit)
-
-type PageAccess = {
-  allowedRoles: Role[];
-};
-
-const PAGE_ACCESS: Record<string, PageAccess> = {
-  // Dashboard - Everyone
-  "/": { allowedRoles: ["ADMIN", "MANAGER", "STAFF", "WATCHER"] },
-
-  // Events
-  "/events": { allowedRoles: ["ADMIN", "MANAGER", "WATCHER", "STAFF"] },
-  "/events/new": { allowedRoles: ["ADMIN", "MANAGER", "STAFF"] },
-  "/events/[id]": { allowedRoles: ["ADMIN", "MANAGER", "WATCHER", "STAFF"] },
-  "/events/[id]/inventory": { allowedRoles: ["ADMIN", "MANAGER", "STAFF"] },
-
-  // Inventory - Everyone can view, but edit is restricted in component
-  "/inventory": { allowedRoles: ["ADMIN", "MANAGER", "STAFF", "WATCHER"] },
-
-  // Ledger - Financial data
-  "/ledger": { allowedRoles: ["ADMIN", "MANAGER"] },
-
-  // System Logs
-  "/logs": { allowedRoles: ["ADMIN", "MANAGER"] },
-
-  // Lost Items
-  "/lost-items": { allowedRoles: ["ADMIN", "MANAGER", "STAFF"] },
-
-  // Settings - Admin only
-  "/settings": { allowedRoles: ["ADMIN"] },
-  "/settings/venues": { allowedRoles: ["ADMIN"] },
-  "/settings/caterers": { allowedRoles: ["ADMIN"] },
-  "/settings/data": { allowedRoles: ["ADMIN"] },
-  "/settings/email-test": { allowedRoles: ["ADMIN"] },
-
-  // Profile - Everyone
-  "/profile": { allowedRoles: ["ADMIN", "MANAGER", "STAFF", "WATCHER"] },
-  "/complete-profile": {
-    allowedRoles: ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
-  },
-
-  // Users - Admin only
-  "/users": { allowedRoles: ["ADMIN"] },
-};
+type PagePath = keyof typeof rbacConfig.pages;
 
 /**
  * Server-side role verification. Call this at the top of Server Components.
@@ -69,20 +23,32 @@ export async function requireAccess(pagePath: string) {
   const user = session.user as any;
   const role = user.role as Role;
 
-  // Normalize path for dynamic routes
-  let normalizedPath = pagePath;
+  // Find matching rule
+  let allowedRoles: Role[] | undefined;
 
-  // Handle dynamic routes like /events/[id]
-  if (pagePath.match(/^\/events\/[^/]+$/)) {
-    normalizedPath = "/events/[id]";
-  } else if (pagePath.match(/^\/events\/[^/]+\/inventory$/)) {
-    normalizedPath = "/events/[id]/inventory";
+  // 1. Exact match
+  if (pagePath in rbacConfig.pages) {
+    allowedRoles = rbacConfig.pages[pagePath as PagePath] as Role[];
+  } else {
+    // 2. Dynamic match
+    const patterns = Object.keys(rbacConfig.pages).sort(
+      (a, b) => b.length - a.length,
+    );
+    for (const pattern of patterns) {
+      const regexStr = pattern
+        .replace(/\[\.\.\.[^\]]+\]/g, ".*")
+        .replace(/\[[^\]]+\]/g, "[^/]+")
+        .replace(/\//g, "\\/");
+
+      if (new RegExp(`^${regexStr}$`).test(pagePath)) {
+        allowedRoles = rbacConfig.pages[pattern as PagePath] as Role[];
+        break;
+      }
+    }
   }
 
-  const access = PAGE_ACCESS[normalizedPath];
-
   // If page not defined, default to ADMIN only
-  if (!access) {
+  if (!allowedRoles) {
     if (role !== "ADMIN") {
       redirect("/unauthorized");
     }
@@ -90,7 +56,7 @@ export async function requireAccess(pagePath: string) {
   }
 
   // Check if user's role is allowed
-  if (!access.allowedRoles.includes(role)) {
+  if (!allowedRoles.includes(role)) {
     redirect("/unauthorized");
   }
 

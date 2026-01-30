@@ -6,6 +6,14 @@ export const metadata: Metadata = {
     description: "Danger - System Reset",
 };
 
-export default function ResetSystemPage() {
+import { redirect } from "next/navigation";
+import { checkPageAccess } from "@/lib/rbac-server";
+
+export default async function ResetSystemPage() {
+    const hasAccess = await checkPageAccess("/settings/data/reset");
+    if (!hasAccess) {
+        redirect("/unauthorized");
+    }
+
     return <ResetSystemClient />;
 }

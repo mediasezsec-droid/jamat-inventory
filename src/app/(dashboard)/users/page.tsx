@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function UsersPage() {
     const hasAccess = await checkPageAccess("/users");
     if (!hasAccess) {
-        redirect("/");
+        redirect("/unauthorized");
     }
     return <UsersClient />;
 }

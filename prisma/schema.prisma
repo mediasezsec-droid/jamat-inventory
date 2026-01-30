@@ -222,12 +222,21 @@ model Blog {
 }
 
 model Banner {
-  id        String   @id @default(cuid())
-  imageUrl  String
-  href      String?
-  isActive  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(cuid())
+  imageUrl        String
+  href            String?
+  isActive        Boolean  @default(false)
+
+  // Countdown Features
+  countdownTarget DateTime?
+  countdownLabel  String?
+  x               Float?   @default(50)
+  y               Float?   @default(50)
+  countdownSize   String?  @default("normal")
+  countdownColor  String?  @default("gold")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@map("banners")
 }

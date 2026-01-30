@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { format, isPast, isToday, isFuture } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getMisriDate } from "@/lib/misri-calendar";
-import { cn } from "@/lib/utils";
+import { cn, getISTDate } from "@/lib/utils";
 import {
     Plus,
     Calendar as CalendarIcon,
@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RBACWrapper } from "@/components/rbac-wrapper";
 import {
     Card,
     CardContent,
@@ -124,7 +125,7 @@ export default function EventsPage({ initialEvents }: EventsPageProps) {
     const getStatusBadge = (event: Event) => {
         if (event.status === "CANCELLED") return <Badge variant="destructive">Cancelled</Badge>;
 
-        const date = new Date(event.occasionDate);
+        const date = getISTDate(event.occasionDate);
         if (isToday(date)) return <Badge className="bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 border-emerald-200 shadow-none">Today</Badge>;
         if (isFuture(date)) return <Badge className="bg-indigo-500/15 text-indigo-700 hover:bg-indigo-500/25 border-indigo-200 shadow-none">Upcoming</Badge>;
         return <Badge variant="secondary" className="bg-slate-100 text-slate-500 hover:bg-slate-200 border-slate-200 shadow-none">Past</Badge>;
@@ -133,10 +134,11 @@ export default function EventsPage({ initialEvents }: EventsPageProps) {
     const canManage = role === "ADMIN" || role === "MANAGER";
     const isAdmin = role === "ADMIN";
 
-    // Event counts
-    const todayCount = events.filter(e => isToday(new Date(e.occasionDate)) && e.status !== "CANCELLED").length;
-    const upcomingCount = events.filter(e => isFuture(new Date(e.occasionDate)) && e.status !== "CANCELLED").length;
-    const pastCount = events.filter(e => isPast(new Date(e.occasionDate)) && !isToday(new Date(e.occasionDate))).length;
+
+    // Event counts (using IST dates)
+    const todayCount = events.filter(e => isToday(getISTDate(e.occasionDate)) && e.status !== "CANCELLED").length;
+    const upcomingCount = events.filter(e => isFuture(getISTDate(e.occasionDate)) && e.status !== "CANCELLED").length;
+    const pastCount = events.filter(e => isPast(getISTDate(e.occasionDate)) && !isToday(getISTDate(e.occasionDate))).length;
     const cancelledCount = events.filter(e => e.status === "CANCELLED").length;
 
     return (
@@ -155,15 +157,15 @@ export default function EventsPage({ initialEvents }: EventsPageProps) {
                     >
                         <CalendarIcon className="mr-2 h-5 w-5" /> Calendar View
                     </Button>
-                    {canManage && (
+                    <RBACWrapper componentId="btn-event-create">
                         <Button
-                            id="btn-event-create" // RBAC ID
+                            id="btn-event-create"
                             onClick={() => router.push("/events/new")}
                             className="btn-gradient-primary shadow-lg h-11 px-6 rounded-xl"
                         >
                             <Plus className="mr-2 h-5 w-5" /> New Event
                         </Button>
-                    )}
+                    </RBACWrapper>
                 </div>
             </div>
 
@@ -235,8 +237,8 @@ export default function EventsPage({ initialEvents }: EventsPageProps) {
                 </div>
             ) : (
                 <Tabs defaultValue={
-                    filteredEvents.some(e => isToday(new Date(e.occasionDate))) ? "active" :
-                        filteredEvents.some(e => isFuture(new Date(e.occasionDate))) ? "upcoming" : "completed"
+                    filteredEvents.some(e => isToday(getISTDate(e.occasionDate))) ? "active" :
+                        filteredEvents.some(e => isFuture(getISTDate(e.occasionDate))) ? "upcoming" : "completed"
                 } className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="flex items-center justify-between mb-6">
                         <TabsList className="grid w-full max-w-[400px] grid-cols-3">
@@ -247,10 +249,10 @@ export default function EventsPage({ initialEvents }: EventsPageProps) {
                     </div>
 
                     <TabsContent value="active" className="space-y-4">
-                        {filteredEvents.filter(e => isToday(new Date(e.occasionDate))).length > 0 ? (
+                        {filteredEvents.filter(e => isToday(getISTDate(e.occasionDate))).length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                                 {filteredEvents
-                                    .filter(e => isToday(new Date(e.occasionDate)))
+                                    .filter(e => isToday(getISTDate(e.occasionDate)))
                                     .map(event => <EventCard key={event.id} event={event} router={router} isAdmin={isAdmin} handleDeleteClick={handleDeleteClick} getStatusBadge={getStatusBadge} />)
                                 }
                             </div>
@@ -264,7 +266,7 @@ export default function EventsPage({ initialEvents }: EventsPageProps) {
                     <TabsContent value="upcoming" className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                             {filteredEvents
-                                .filter(e => isFuture(new Date(e.occasionDate)))
+                                .filter(e => isFuture(getISTDate(e.occasionDate)))
                                 .map(event => <EventCard key={event.id} event={event} router={router} isAdmin={isAdmin} handleDeleteClick={handleDeleteClick} getStatusBadge={getStatusBadge} />)
                             }
                         </div>
@@ -273,7 +275,7 @@ export default function EventsPage({ initialEvents }: EventsPageProps) {
                     <TabsContent value="completed" className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 opacity-80 hover:opacity-100 transition-opacity">
                             {filteredEvents
-                                .filter(e => isPast(new Date(e.occasionDate)) && !isToday(new Date(e.occasionDate)))
+                                .filter(e => isPast(getISTDate(e.occasionDate)) && !isToday(getISTDate(e.occasionDate)))
                                 .map(event => <EventCard key={event.id} event={event} router={router} isAdmin={isAdmin} handleDeleteClick={handleDeleteClick} getStatusBadge={getStatusBadge} />)
                             }
                         </div>
@@ -311,7 +313,8 @@ export default function EventsPage({ initialEvents }: EventsPageProps) {
 
 function EventCard({ event, router, isAdmin, handleDeleteClick, getStatusBadge }: any) {
     const isCancelled = event.status === "CANCELLED";
-    const hijri = getMisriDate(new Date(event.occasionDate));
+    const istDate = getISTDate(event.occasionDate);
+    const hijri = getMisriDate(istDate);
 
     return (
         <Card
@@ -326,10 +329,10 @@ function EventCard({ event, router, isAdmin, handleDeleteClick, getStatusBadge }
                         isCancelled ? "bg-slate-100 text-slate-400" : "bg-emerald-50 text-emerald-600"
                     )}>
                         <span className="text-[10px] font-bold uppercase">
-                            {format(new Date(event.occasionDate), "MMM")}
+                            {format(istDate, "MMM")}
                         </span>
                         <span className="text-lg font-bold leading-none">
-                            {format(new Date(event.occasionDate), "d")}
+                            {format(istDate, "d")}
                         </span>
                     </div>
                     <div>

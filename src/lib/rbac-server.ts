@@ -11,7 +11,30 @@ export async function checkPageAccess(path: string): Promise<boolean> {
   if (!userRole) return false;
   if (userRole === "ADMIN") return true;
 
-  const allowedRoles = rbacConfig.pages[path as PagePath];
+  // Find matching rule
+  let allowedRoles: Role[] | undefined;
+
+  // 1. Exact match
+  if (path in rbacConfig.pages) {
+    allowedRoles = rbacConfig.pages[path as PagePath] as Role[];
+  } else {
+    // 2. Dynamic match (similar to middleware)
+    const patterns = Object.keys(rbacConfig.pages).sort(
+      (a, b) => b.length - a.length,
+    );
+    for (const pattern of patterns) {
+      // Convert pattern like /events/[id] to regex
+      const regexStr = pattern
+        .replace(/\[\.\.\.[^\]]+\]/g, ".*")
+        .replace(/\[[^\]]+\]/g, "[^/]+")
+        .replace(/\//g, "\\/");
+
+      if (new RegExp(`^${regexStr}$`).test(path)) {
+        allowedRoles = rbacConfig.pages[pattern as PagePath] as Role[];
+        break;
+      }
+    }
+  }
 
   // Strict Security Policy: If page is not in config, DENY access.
   if (!allowedRoles) return false;

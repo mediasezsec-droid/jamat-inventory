@@ -5,10 +5,12 @@ import { Command } from "cmdk";
 import { Search, Calendar, Package, Settings, User, FileText, LayoutDashboard, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useRBAC } from "@/hooks/use-rbac";
 
 export function CommandMenu() {
     const router = useRouter();
     const [open, setOpen] = useState(false);
+    const { canViewPage } = useRBAC();
 
     useEffect(() => {
         const down = (e: KeyboardEvent) => {
@@ -61,12 +63,16 @@ export function CommandMenu() {
                 </Command.Group>
 
                 <Command.Group heading="Quick Actions" className="text-xs font-medium text-slate-500 px-2 py-1.5 mb-2">
-                    <CommandItem onSelect={() => runCommand(() => router.push("/events/new"))}>
-                        <Plus className="w-4 h-4 mr-2" /> New Event
-                    </CommandItem>
-                    <CommandItem onSelect={() => runCommand(() => router.push("/inventory/add"))}>
-                        <Plus className="w-4 h-4 mr-2" /> Add Inventory Item
-                    </CommandItem>
+                    {canViewPage("/events/new") && (
+                        <CommandItem onSelect={() => runCommand(() => router.push("/events/new"))}>
+                            <Plus className="w-4 h-4 mr-2" /> New Event
+                        </CommandItem>
+                    )}
+                    {canViewPage("/inventory/add") && (
+                        <CommandItem onSelect={() => runCommand(() => router.push("/inventory/add"))}>
+                            <Plus className="w-4 h-4 mr-2" /> Add Inventory Item
+                        </CommandItem>
+                    )}
                     <CommandItem onSelect={() => runCommand(() => router.push("/events/calendar"))}>
                         <Calendar className="w-4 h-4 mr-2" /> View Calendar
                     </CommandItem>
