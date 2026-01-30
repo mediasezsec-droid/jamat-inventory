@@ -5,6 +5,7 @@ import { Event, InventoryItem } from "@/types";
 import EventDetailsClient from "./_components/event-details-client";
 import { rtdb } from "@/lib/firebase"; // Keep RTDB for logs if available there
 import { getMisriDate } from "@/lib/misri-calendar";
+import { formatInTimeZone } from "date-fns-tz";
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +63,7 @@ export default async function EventDetailsPage({ params }: PageProps) {
         let hijriString = null;
         try {
             // Create a date object from the event date string
-            const d = new Date(safeEvent.occasionDate);
+            const d = new Date(formatInTimeZone(safeEvent.occasionDate, 'Asia/Kolkata', 'yyyy-MM-dd'));
             // Verify if we need timezone adjustment?
             // Usually occasionDate is stored as UTC.
             // If we just pass it to getMisriDate, it uses the UTC date components.
