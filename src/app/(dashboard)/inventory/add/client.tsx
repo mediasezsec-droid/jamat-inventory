@@ -185,11 +185,17 @@ export default function AddInventoryPageClient() {
                                                 <div className="relative group flex-1">
                                                     <Calculator className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                                                     <Input
-                                                        type="number"
+                                                        type="text"
+                                                        inputMode="numeric"
+                                                        pattern="[0-9]*"
                                                         className="pl-10 h-11 font-mono text-lg bg-white border-slate-200 focus:ring-indigo-500"
                                                         placeholder="0"
-                                                        {...field}
-                                                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                                                        value={field.value || ""}
+                                                        onChange={(e) => {
+                                                            if (/^[0-9]*$/.test(e.target.value)) {
+                                                                field.onChange(Number(e.target.value) || 0);
+                                                            }
+                                                        }}
                                                     />
                                                 </div>
                                             </FormControl>

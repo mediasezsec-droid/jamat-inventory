@@ -448,11 +448,18 @@ function QuickActionRow({ qtyValue, onQtyChange, onDispatch, onReturn, deficit, 
 
             <div className="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200">
                 <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     className="w-16 bg-transparent text-center text-sm font-semibold focus:outline-none placeholder:text-slate-400"
                     placeholder="Qty"
                     value={qtyValue}
-                    onChange={(e) => onQtyChange(e.target.value)}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^[0-9]*$/.test(value)) {
+                            onQtyChange(value);
+                        }
+                    }}
                     onKeyDown={(e) => {
                         if (e.key === "Enter" && qtyValue) {
                             handleAction("return"); // Default to return on Enter? Or do nothing?

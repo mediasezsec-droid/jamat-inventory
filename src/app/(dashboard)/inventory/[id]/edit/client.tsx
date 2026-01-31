@@ -102,11 +102,16 @@ export default function EditInventoryClient({ initialItem }: EditInventoryClient
                                 <Label htmlFor="totalQuantity">Total Quantity</Label>
                                 <Input
                                     id="totalQuantity"
-                                    type="number"
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     value={item.totalQuantity}
-                                    onChange={(e) => setItem({ ...item, totalQuantity: e.target.value })}
+                                    onChange={(e) => {
+                                        if (/^[0-9]*$/.test(e.target.value)) {
+                                            setItem({ ...item, totalQuantity: e.target.value });
+                                        }
+                                    }}
                                     required
-                                    min="0"
                                 />
                                 <p className="text-xs text-slate-500">
                                     Changing total quantity will adjust available quantity by the difference.

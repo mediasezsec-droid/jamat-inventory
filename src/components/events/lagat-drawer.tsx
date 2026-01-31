@@ -70,11 +70,15 @@ export function LagatDrawer({
                                     <div className="flex-1">
                                         <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Rate (Per Thaal)</span>
                                         <Input
-                                            type="number"
+                                            type="text"
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
                                             placeholder="Rate"
                                             className="h-9"
                                             onChange={(e) => {
-                                                const rate = Number(e.target.value);
+                                                const value = e.target.value;
+                                                if (!/^[0-9]*$/.test(value)) return;
+                                                const rate = Number(value);
                                                 const count = counts.thaalCount || 0;
                                                 onChange("thaal", String(rate * count));
                                             }}
@@ -109,11 +113,15 @@ export function LagatDrawer({
                                     <div className="flex-1">
                                         <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Rate (Per Set)</span>
                                         <Input
-                                            type="number"
+                                            type="text"
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
                                             placeholder="Rate"
                                             className="h-9"
                                             onChange={(e) => {
-                                                const rate = Number(e.target.value);
+                                                const value = e.target.value;
+                                                if (!/^[0-9]*$/.test(value)) return;
+                                                const rate = Number(value);
                                                 const count = counts.sarkariCount || 0;
                                                 onChange("sarkari", String(rate * count));
                                             }}
@@ -149,27 +157,39 @@ export function LagatDrawer({
                                 <div className="space-y-2">
                                     <Label>Kitchen Charge</Label>
                                     <Input
-                                        type="number"
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
                                         value={amounts.kitchen || ""}
-                                        onChange={(e) => onChange("kitchen", e.target.value)}
+                                        onChange={(e) => {
+                                            if (/^[0-9]*$/.test(e.target.value)) onChange("kitchen", e.target.value);
+                                        }}
                                         placeholder="₹ 0"
                                     />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Decoration</Label>
                                     <Input
-                                        type="number"
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
                                         value={amounts.decoration || ""}
-                                        onChange={(e) => onChange("decoration", e.target.value)}
+                                        onChange={(e) => {
+                                            if (/^[0-9]*$/.test(e.target.value)) onChange("decoration", e.target.value);
+                                        }}
                                         placeholder="₹ 0"
                                     />
                                 </div>
                                 <div className="space-y-2 col-span-2">
                                     <Label>Other Misc Costs</Label>
                                     <Input
-                                        type="number"
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
                                         value={amounts.other || ""}
-                                        onChange={(e) => onChange("other", e.target.value)}
+                                        onChange={(e) => {
+                                            if (/^[0-9]*$/.test(e.target.value)) onChange("other", e.target.value);
+                                        }}
                                         placeholder="₹ 0"
                                     />
                                 </div>
@@ -187,9 +207,13 @@ export function LagatDrawer({
                                             <div className="space-y-2" key={key}>
                                                 <Label>{hallName}</Label>
                                                 <Input
-                                                    type="number"
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
                                                     value={amounts[key] || ""}
-                                                    onChange={(e) => onChange(key, e.target.value)}
+                                                    onChange={(e) => {
+                                                        if (/^[0-9]*$/.test(e.target.value)) onChange(key, e.target.value);
+                                                    }}
                                                     placeholder="₹ 0"
                                                     className="border-indigo-200 text-indigo-700 font-semibold"
                                                 />
@@ -208,9 +232,13 @@ export function LagatDrawer({
                                     <span className="text-[10px] uppercase text-indigo-400 font-bold tracking-wider">Separate</span>
                                 </div>
                                 <Input
-                                    type="number"
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     value={amounts.deposit || ""}
-                                    onChange={(e) => onChange("deposit", e.target.value)}
+                                    onChange={(e) => {
+                                        if (/^[0-9]*$/.test(e.target.value)) onChange("deposit", e.target.value);
+                                    }}
                                     placeholder="Enter deposit amount..."
                                     className="border-indigo-300 ring-indigo-200 bg-white text-lg font-bold text-indigo-900"
                                 />

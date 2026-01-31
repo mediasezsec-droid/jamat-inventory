@@ -311,9 +311,15 @@ export default function InventoryClient({ initialItems }: InventoryClientProps) 
                                                 <Label htmlFor="quantity" className="text-sm font-medium text-slate-700">Quantity</Label>
                                                 <Input
                                                     id="quantity"
-                                                    type="number"
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
                                                     value={newItem.quantity}
-                                                    onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
+                                                    onChange={(e) => {
+                                                        if (/^[0-9]*$/.test(e.target.value)) {
+                                                            setNewItem({ ...newItem, quantity: e.target.value });
+                                                        }
+                                                    }}
                                                     placeholder="0"
                                                     className="w-full h-11 rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
                                                 />

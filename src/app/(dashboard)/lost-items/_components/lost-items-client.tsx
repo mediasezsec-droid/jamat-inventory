@@ -288,11 +288,16 @@ export default function LostItemsClient({ initialLogs }: LostItemsClientProps) {
                             Quantity Found (Max: {selectedLog?.remainingQuantity ?? selectedLog?.details.quantity})
                         </Label>
                         <Input
-                            type="number"
-                            min={1}
-                            max={selectedLog?.remainingQuantity ?? selectedLog?.details.quantity}
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             value={recoverQty}
-                            onChange={(e) => setRecoverQty(parseInt(e.target.value) || 0)}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (/^[0-9]*$/.test(value)) {
+                                    setRecoverQty(parseInt(value) || 0);
+                                }
+                            }}
                             className="h-12 text-center text-lg font-bold rounded-xl"
                         />
                     </div>
