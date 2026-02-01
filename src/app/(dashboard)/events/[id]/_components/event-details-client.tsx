@@ -3,12 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { Loader2, Edit, Printer, Package, ArrowLeft, FileText, Trash2, Calendar, Phone, MapPin, ChefHat, AlertTriangle, Copy, MoreVertical } from "lucide-react";
+import { Loader2, Edit, Printer, Package, ArrowLeft, FileText, Trash2, Calendar, Phone, MapPin, ChefHat, AlertTriangle, Copy, MoreVertical, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Event, InventoryItem } from "@/types";
 import { useSession } from "next-auth/react";
 import { RBACWrapper } from "@/components/rbac-wrapper";
@@ -16,6 +19,7 @@ import { generateEventManifest } from "@/lib/pdf-generator";
 import { QRDialog } from "./qr-dialog";
 import { Separator } from "@/components/ui/separator";
 import { EventStepper } from "./event-stepper";
+import { toast } from "sonner";
 
 // Type for database-backed inventory allocations
 interface EventInventoryAllocation {
@@ -73,6 +77,41 @@ export default function EventDetailsClient({ initialEvent, initialInventory, ini
 
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [relatedData, setRelatedData] = useState<{ count: number } | null>(null);
+
+    // Thaal Served Drawer State
+    const [thaalDrawerOpen, setThaalDrawerOpen] = useState(false);
+    const [thaalServedCount, setThaalServedCount] = useState("");
+    const [isSavingThaal, setIsSavingThaal] = useState(false);
+
+    // Update Thaal Served
+    const handleUpdateThaalServed = async () => {
+        const count = parseInt(thaalServedCount);
+        if (!count || count < 0) {
+            toast.error("Please enter a valid count");
+            return;
+        }
+
+        setIsSavingThaal(true);
+        try {
+            const res = await fetch(`/api/events/${event.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ totalThaalsDone: count }),
+            });
+
+            if (!res.ok) throw new Error("Failed to update");
+
+            toast.success("Thaals served updated successfully");
+            setEvent({ ...event, totalThaalsDone: count } as any);
+            setThaalDrawerOpen(false);
+            setThaalServedCount("");
+            router.refresh();
+        } catch (error) {
+            toast.error("Failed to update thaals served");
+        } finally {
+            setIsSavingThaal(false);
+        }
+    };
 
     // Cancel Event
     const handleCancelEvent = async () => {
@@ -436,9 +475,31 @@ export default function EventDetailsClient({ initialEvent, initialInventory, ini
                         </CardHeader>
                         <CardContent className="p-0">
                             <div className="p-6 md:p-8 space-y-8">
-                                <div className="flex justify-between items-baseline">
-                                    <span className="text-sm font-medium text-slate-500 uppercase tracking-wide">Thaal Count</span>
-                                    <span className="text-4xl font-bold text-slate-900">{event.thaalCount}</span>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-baseline">
+                                        <span className="text-sm font-medium text-slate-500 uppercase tracking-wide">Thaal Count</span>
+                                        <span className="text-4xl font-bold text-slate-900">{event.thaalCount}</span>
+                                    </div>
+                                    {event.totalThaalsDone && (
+                                        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-semibold text-emerald-700 uppercase">Thaals Served</span>
+                                                <span className="text-2xl font-bold text-emerald-700">{event.totalThaalsDone}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full bg-white hover:bg-emerald-50 text-emerald-600 border-emerald-200"
+                                        onClick={() => {
+                                            setThaalServedCount(event.totalThaalsDone?.toString() || "");
+                                            setThaalDrawerOpen(true);
+                                        }}
+                                    >
+                                        <CheckCircle className="mr-2 h-4 w-4" />
+                                        Update Thaal Served
+                                    </Button>
                                 </div>
                                 <Separator />
                                 <div className="flex justify-between items-baseline pt-4 border-t border-slate-100">
@@ -535,6 +596,53 @@ export default function EventDetailsClient({ initialEvent, initialInventory, ini
                     </div>
                 </div>
             )}
+
+            {/* Thaal Served Update Drawer */}
+            <Drawer open={thaalDrawerOpen} onOpenChange={setThaalDrawerOpen}>
+                <DrawerContent>
+                    <div className="mx-auto w-full max-w-sm">
+                        <DrawerHeader>
+                            <DrawerTitle>Update Thaals Served</DrawerTitle>
+                            <DrawerDescription>
+                                How many thaals were actually served at this event?
+                            </DrawerDescription>
+                        </DrawerHeader>
+                        <div className="p-4">
+                            <Label className="text-sm text-slate-600 mb-2 block">
+                                Total Thaals Served
+                            </Label>
+                            <Input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={thaalServedCount}
+                                onChange={(e) => {
+                                    if (/^[0-9]*$/.test(e.target.value)) {
+                                        setThaalServedCount(e.target.value);
+                                    }
+                                }}
+                                className="h-12 text-center text-lg font-bold rounded-xl"
+                                placeholder="Enter count..."
+                            />
+                        </div>
+                        <DrawerFooter className="flex flex-col gap-3">
+                            <Button
+                                onClick={handleUpdateThaalServed}
+                                disabled={isSavingThaal}
+                                className="w-full h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white"
+                            >
+                                {isSavingThaal ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                                Save Count
+                            </Button>
+                            <DrawerClose asChild>
+                                <Button variant="outline" className="w-full h-12 rounded-xl border-slate-300">
+                                    Cancel
+                                </Button>
+                            </DrawerClose>
+                        </DrawerFooter>
+                    </div>
+                </DrawerContent>
+            </Drawer>
         </div>
     );
 }

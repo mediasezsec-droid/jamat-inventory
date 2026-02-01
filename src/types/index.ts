@@ -37,6 +37,7 @@ export interface Event {
 
   // Essentials
   thaalCount: number;
+  totalThaalsDone?: number; // Actual thaals served (filled after event)
   sarkariThaalSet: number;
   bhaiSaabIzzan: boolean;
   benSaabIzzan: boolean;
