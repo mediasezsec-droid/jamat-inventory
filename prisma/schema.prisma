@@ -16,9 +16,11 @@ datasource db {
 // Enums
 enum Role {
   ADMIN
+  ADMIN_CUSTOM
   MANAGER
   STAFF
   WATCHER
+  USER
 }
 
 enum ProfileStatus {
@@ -52,6 +54,7 @@ model User {
   updatedAt     DateTime       @updatedAt
 
   events        Event[]        @relation("CreatedBy")
+  moduleAccess  UserModuleAccess[]
 
   @@map("users")
 }
@@ -266,4 +269,32 @@ model Banner {
   updatedAt       DateTime @updatedAt
 
   @@map("banners")
+}
+
+// Module-Based Access Control
+model Module {
+  id          String   @id // Slugified from name (e.g., "manage-banners")
+  name        String   @unique  // Display name: "Manage Banners"
+  path        String?            // Optional route path: "/admin/banners"
+  elementId   String?            // Optional element ID for granular control
+  description String?
+  icon        String?            // Lucide icon name
+  createdAt   DateTime @default(now())
+  
+  userAccess  UserModuleAccess[]
+  
+  @@map("modules")
+}
+
+model UserModuleAccess {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleId  String
+  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, moduleId])
+  @@map("user_module_access")
 }
