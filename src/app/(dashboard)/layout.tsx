@@ -27,7 +27,7 @@ export default async function DashboardLayout({
     }
 
     return (
-        <div className="h-full relative min-h-screen bg-slate-50/50">
+        <div className="h-full relative min-h-screen">
             <ProfileCheck />
 
             {/* Unified Sidebar handles both Mobile (Sheet) and Desktop (Fixed) */}

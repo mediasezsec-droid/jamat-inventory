@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { format, addDays, subDays } from "date-fns";
+import { format, addDays, subDays, isToday, parse } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
     Calendar as CalendarIcon,
@@ -23,6 +23,17 @@ import { SharedCalendar } from "@/components/shared-calendar";
 import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
+
+// Helper to parse "HH:mm AM/PM" time string relative to a base date
+const parseEventTime = (timeStr: string, baseDate: Date) => {
+    try {
+        // Try parsing "hh:mm a" (e.g. 08:30 PM)
+        return parse(timeStr, "hh:mm a", baseDate);
+    } catch (e) {
+        // Fallback or explicit handling if needed
+        return baseDate;
+    }
+};
 import { useRouter } from "next/navigation";
 import { enGB } from "date-fns/locale";
 import { Event } from "@/types";
@@ -150,6 +161,34 @@ export default function DashboardClient({ initialEvents, todayHijri, currentDate
         }
     };
 
+    // Process events: Sort by Time & Filter completed (3h buffer)
+    const sortedAndFilteredEvents = [...events]
+        .map(event => {
+            const dateForEvent = date || new Date();
+            let parsedDate = dateForEvent;
+
+            if (event.occasionTime) {
+                // Normalize string (trim whitespace)
+                const timeClean = event.occasionTime.trim();
+                parsedDate = parseEventTime(timeClean, dateForEvent);
+            }
+            return { ...event, _parsedDate: parsedDate };
+        })
+        .sort((a, b) => a._parsedDate.getTime() - b._parsedDate.getTime())
+        .filter(event => {
+            // "Show completed 3 hours after the event time"
+            // If viewing Today, hide events from > 3 hours ago
+            if (date && isToday(date)) {
+                const now = new Date();
+                const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
+
+                if (event._parsedDate < threeHoursAgo) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Page Header Area */}
@@ -245,18 +284,18 @@ export default function DashboardClient({ initialEvents, todayHijri, currentDate
                                     <div key={i} className="h-24 w-full bg-white rounded-2xl animate-pulse" />
                                 ))}
                             </div>
-                        ) : !events || events.length === 0 ? (
+                        ) : !sortedAndFilteredEvents || sortedAndFilteredEvents.length === 0 ? (
                             <Card className="flex flex-col items-center justify-center p-12 border border-dashed border-slate-200 bg-slate-50/50">
                                 <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-4">
                                     <Clock className="h-6 w-6 text-slate-400" />
                                 </div>
-                                <p className="text-slate-500 font-medium">No events scheduled for this date</p>
+                                <p className="text-slate-500 font-medium">No active events</p>
                                 <Button variant="link" onClick={() => router.push("/events/new")} className="mt-2 text-indigo-600">
                                     Schedule an Event
                                 </Button>
                             </Card>
                         ) : (
-                            events.map((event) => {
+                            sortedAndFilteredEvents.map((event) => {
                                 const isCancelled = event.status === "CANCELLED";
                                 return (
                                     <Card
@@ -381,33 +420,35 @@ export default function DashboardClient({ initialEvents, todayHijri, currentDate
             </div>
 
             {/* Delete Confirmation Dialog */}
-            {deleteConfirmOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
-                        <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                                <AlertTriangle className="h-6 w-6 text-red-600" />
+            {
+                deleteConfirmOpen && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+                            <div className="flex items-center gap-4">
+                                <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                    <AlertTriangle className="h-6 w-6 text-red-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-slate-900">Confirm Deletion</h3>
+                                    <p className="text-slate-500 text-sm">This action cannot be undone.</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-slate-900">Confirm Deletion</h3>
-                                <p className="text-slate-500 text-sm">This action cannot be undone.</p>
+
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <p className="text-slate-700 text-sm">
+                                    This event has <span className="font-bold text-slate-900">{relatedData?.count} inventory logs</span> associated with it.
+                                    Deleting this event will permanently remove the event and all its history.
+                                </p>
                             </div>
-                        </div>
 
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                            <p className="text-slate-700 text-sm">
-                                This event has <span className="font-bold text-slate-900">{relatedData?.count} inventory logs</span> associated with it.
-                                Deleting this event will permanently remove the event and all its history.
-                            </p>
-                        </div>
-
-                        <div className="flex justify-end gap-3">
-                            <Button variant="outline" onClick={() => { setDeleteConfirmOpen(false); setSelectedEventId(null); }} className="rounded-xl">Cancel</Button>
-                            <Button variant="destructive" onClick={() => selectedEventId && performDelete(selectedEventId, true)} className="rounded-xl px-6">Delete Everything</Button>
+                            <div className="flex justify-end gap-3">
+                                <Button variant="outline" onClick={() => { setDeleteConfirmOpen(false); setSelectedEventId(null); }} className="rounded-xl">Cancel</Button>
+                                <Button variant="destructive" onClick={() => selectedEventId && performDelete(selectedEventId, true)} className="rounded-xl px-6">Delete Everything</Button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }

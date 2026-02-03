@@ -48,6 +48,10 @@ export default function EventPrintPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
+    const [paymentMode, setPaymentMode] = useState<"CASH" | "UPI">("CASH");
+    const [transactionId, setTransactionId] = useState("");
+    const [isSavingPayment, setIsSavingPayment] = useState(false);
+
     // Lagat State (Ephemeral - Direct Amounts)
     // Initialize lazily to avoid flash, reading directly from searchParams
     const [lagatAmounts, setLagatAmounts] = useState<Record<string, string>>(() => {
@@ -74,6 +78,32 @@ export default function EventPrintPage() {
         setLagatAmounts(prev => ({ ...prev, [key]: value }));
     };
 
+    const handleSavePayment = async () => {
+        if (paymentMode === "UPI" && !transactionId) {
+            alert("Please enter Transaction ID for UPI");
+            return;
+        }
+        setIsSavingPayment(true);
+        try {
+            const res = await fetch(`/api/events/${eventId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    paymentMode,
+                    transactionId: paymentMode === "UPI" ? transactionId : null
+                }),
+            });
+            if (res.ok) {
+                // Update local event object to reflect changes
+                setEvent(prev => prev ? ({ ...prev, paymentMode, transactionId }) : null);
+            }
+        } catch (error) {
+            console.error("Failed to save payment", error);
+        } finally {
+            setIsSavingPayment(false);
+        }
+    };
+
     useEffect(() => {
         const fetchEvent = async () => {
             try {
@@ -81,6 +111,8 @@ export default function EventPrintPage() {
                 if (res.ok) {
                     const data = await res.json();
                     setEvent(data);
+                    if (data.paymentMode) setPaymentMode(data.paymentMode);
+                    if (data.transactionId) setTransactionId(data.transactionId);
 
                     // Fetch Hijri Date once we have the event date
                     if (data.occasionDate) {
@@ -168,12 +200,9 @@ export default function EventPrintPage() {
                     qty = String(count);
                     if (count > 0) rate = formatForPdf(totalVal / count);
                 } else {
-                    // For other items, treat as qty 1 or fixed
-                    if (e.label.includes("Cost") || e.label.includes("Hall")) {
-                        // Hall costs or generic cost params
-                        qty = "1";
-                        rate = formatForPdf(totalVal);
-                    }
+                    // For all other known and unknown items (Hall, Kitchen, etc.), treat as qty 1
+                    qty = "1";
+                    rate = formatForPdf(totalVal);
                 }
 
                 return {
@@ -189,6 +218,8 @@ export default function EventPrintPage() {
                 items: entriesFormatted,
                 grandTotal: formatForPdf(grandTotal), // This is now exclusive of deposit
                 deposit: Number(lagatAmounts.deposit) > 0 ? formatForPdf(lagatAmounts.deposit) : undefined,
+                paymentMode: paymentMode,
+                transactionId: paymentMode === "UPI" ? transactionId : undefined
             };
             generateMiqaatBookingForm(event, hijriDate, hijriDateAr, pdfData);
         }
@@ -201,24 +232,55 @@ export default function EventPrintPage() {
         <div className="min-h-screen bg-gray-50 p-8">
 
             {/* Controls */}
-            <div className="max-w-4xl mx-auto mb-8 flex justify-between items-center print:hidden">
-                <Button variant="outline" onClick={() => window.history.back()}>Back to Dashboard</Button>
-                <div className="flex gap-4">
-                    <RBACWrapper componentId="btn-event-edit-costs">
-                        <Button
-                            variant="secondary"
-                            onClick={() => setIsDrawerOpen(true)}
-                            className="bg-white border text-slate-700 hover:bg-slate-50 shadow-sm"
-                        >
-                            <Calculator className="mr-2 h-4 w-4" /> Edit Costs
-                        </Button>
-                    </RBACWrapper>
-                    <span className="text-sm text-slate-500 self-center italic hidden md:block">Previewing PDF content...</span>
-                    <RBACWrapper componentId="btn-event-download-pdf">
-                        <Button onClick={handleDownload} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
-                            <Download className="mr-2 h-4 w-4" /> Download PDF
-                        </Button>
-                    </RBACWrapper>
+            <div className="max-w-4xl mx-auto mb-8 flex flex-col gap-4 print:hidden">
+                <div className="bg-white p-4 rounded-lg border shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-4 w-full md:w-auto">
+                        <div className="flex flex-col gap-1.5">
+                            <Label className="text-xs font-semibold text-slate-500 uppercase">Payment Mode</Label>
+                            <select
+                                className="h-9 w-[140px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                value={paymentMode}
+                                onChange={(e) => setPaymentMode(e.target.value as "CASH" | "UPI")}
+                            >
+                                <option value="CASH">Cash</option>
+                                <option value="UPI">UPI / Online</option>
+                            </select>
+                        </div>
+                        {paymentMode === "UPI" && (
+                            <div className="flex flex-col gap-1.5 flex-1 md:w-[250px]">
+                                <Label className="text-xs font-semibold text-slate-500 uppercase">Transaction ID</Label>
+                                <Input
+                                    value={transactionId}
+                                    onChange={(e) => setTransactionId(e.target.value)}
+                                    placeholder="Enter UPI details..."
+                                    className="h-9"
+                                />
+                            </div>
+                        )}
+                        <div className="self-end pb-0.5">
+                            <Button onClick={handleSavePayment} disabled={isSavingPayment} size="sm" className="bg-slate-900 text-white">
+                                {isSavingPayment ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Check className="w-3 h-3 mr-1" />}
+                                Save
+                            </Button>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => window.history.back()}>Back</Button>
+                        <RBACWrapper componentId="btn-event-edit-costs">
+                            <Button
+                                variant="secondary"
+                                onClick={() => setIsDrawerOpen(true)}
+                                className="bg-white border text-slate-700 hover:bg-slate-50 shadow-sm"
+                            >
+                                <Calculator className="mr-2 h-4 w-4" /> Edit Costs
+                            </Button>
+                        </RBACWrapper>
+                        <RBACWrapper componentId="btn-event-download-pdf">
+                            <Button onClick={handleDownload} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
+                                <Download className="mr-2 h-4 w-4" /> Download PDF
+                            </Button>
+                        </RBACWrapper>
+                    </div>
                 </div>
             </div>
 

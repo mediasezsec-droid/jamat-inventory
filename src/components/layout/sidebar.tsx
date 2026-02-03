@@ -98,16 +98,16 @@ export function Sidebar({ className }: SidebarProps) {
         .filter(group => group.items.length > 0);
 
     const SidebarContent = () => (
-        <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground">
+        <div className="flex flex-col h-full bg-[#4A1010] text-[#FDFBF7]">
             {/* Logo */}
             <div className="p-5 pb-4">
                 <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-lg bg-emerald-500 flex items-center justify-center shrink-0">
-                        <span className="text-white font-bold text-lg">J</span>
+                    <div className="h-9 w-9 rounded-lg bg-[#C6A868] flex items-center justify-center shrink-0">
+                        <span className="text-[#4A1010] font-bold text-lg">J</span>
                     </div>
                     <div>
-                        <h1 className="font-semibold text-white text-base leading-tight">Jamaat Inventory</h1>
-                        <p className="text-[10px] text-slate-500 uppercase tracking-wider">v2.0</p>
+                        <h1 className="font-semibold text-sidebar-foreground text-base leading-tight">Jamaat Inventory</h1>
+                        <p className="text-[10px] text-sidebar-foreground/60 uppercase tracking-wider">v2.1</p>
                     </div>
                 </div>
             </div>
@@ -116,7 +116,7 @@ export function Sidebar({ className }: SidebarProps) {
             <div className="flex-1 overflow-y-auto px-3 py-2 space-y-6">
                 {visibleGroups.map((group) => (
                     <div key={group.label}>
-                        <h4 className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest px-3 mb-2">
+                        <h4 className="text-[10px] font-semibold text-sidebar-foreground/60 uppercase tracking-widest px-3 mb-2">
                             {group.label}
                         </h4>
                         <div className="space-y-0.5">
@@ -130,16 +130,16 @@ export function Sidebar({ className }: SidebarProps) {
                                         className={cn(
                                             "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150",
                                             isActive
-                                                ? "bg-sidebar-accent text-white"
-                                                : "text-slate-400 hover:bg-sidebar-accent/50 hover:text-slate-200"
+                                                ? "bg-[#5F1515] text-[#C6A868]"
+                                                : "text-[#FDFBF7]/60 hover:bg-[#5F1515]/50 hover:text-[#FDFBF7]"
                                         )}
                                     >
                                         {isActive && (
-                                            <span className="w-0.5 h-4 bg-emerald-500 rounded-full -ml-1.5 mr-1" />
+                                            <span className="w-0.5 h-4 bg-[#C6A868] rounded-full -ml-1.5 mr-1" />
                                         )}
                                         <route.icon className={cn(
                                             "h-4 w-4",
-                                            isActive ? "text-emerald-400" : "text-slate-500"
+                                            isActive ? "text-[#C6A868]" : "text-[#FDFBF7]/60"
                                         )} />
                                         <span>{route.label}</span>
                                     </Link>
@@ -153,19 +153,19 @@ export function Sidebar({ className }: SidebarProps) {
             {/* User Footer */}
             <div className="p-4 border-t border-sidebar-border">
                 <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8 border border-slate-700">
+                    <Avatar className="h-8 w-8 border border-sidebar-border">
                         <AvatarImage src={user?.image || ""} />
-                        <AvatarFallback className="bg-slate-700 text-slate-300 text-xs font-medium">
+                        <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground text-xs font-medium">
                             {user?.name?.charAt(0) || "U"}
                         </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-200 truncate">{user?.name || "User"}</p>
-                        <p className="text-[10px] text-slate-500 capitalize">{role?.toLowerCase()}</p>
+                        <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.name || "User"}</p>
+                        <p className="text-[10px] text-sidebar-foreground/60 capitalize">{role?.toLowerCase()}</p>
                     </div>
                     <button
                         onClick={() => signOut()}
-                        className="p-1.5 rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition-colors"
+                        className="p-1.5 rounded-md text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
                     >
                         <LogOut className="h-4 w-4" />
                     </button>
@@ -179,7 +179,7 @@ export function Sidebar({ className }: SidebarProps) {
             {/* Mobile Sheet */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
-                    <button className="lg:hidden fixed left-4 top-4 z-50 p-2.5 rounded-lg bg-slate-900 text-white shadow-lg border border-slate-800">
+                    <button className="lg:hidden fixed left-4 top-4 z-50 p-2.5 rounded-lg bg-[#4A1010] text-[#FDFBF7] shadow-lg border border-[#5F1515]">
                         <Menu className="h-5 w-5" />
                         <span className="sr-only">Toggle Menu</span>
                     </button>

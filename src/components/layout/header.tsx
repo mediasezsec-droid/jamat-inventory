@@ -37,10 +37,10 @@ export function Header({ user, role }: HeaderProps) {
             {/* Search Bar - Global */}
             <div className="flex flex-1 items-center gap-4">
                 <div className="relative w-full max-w-sm hidden md:block">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         placeholder="Search..."
-                        className="pl-9 bg-slate-50 border-slate-200 focus:bg-white h-10 w-full"
+                        className="pl-9 bg-background/50 border-input focus:bg-background h-10 w-full"
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                                 const target = (e.currentTarget as HTMLInputElement).value;
@@ -55,18 +55,18 @@ export function Header({ user, role }: HeaderProps) {
             {/* Right Side Actions */}
             <div className="flex items-center gap-4">
                 {/* Notifications */}
-                <Button variant="ghost" size="icon" className="relative text-slate-500 hover:text-indigo-600 rounded-full h-10 w-10">
+                <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary rounded-full h-10 w-10">
                     <Bell className="h-5 w-5" />
-                    <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+                    <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-destructive ring-2 ring-background"></span>
                 </Button>
 
                 {/* User Dropdown */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
-                            <Avatar className="h-9 w-9 border border-slate-200">
+                            <Avatar className="h-9 w-9 border border-border">
                                 <AvatarImage src={user?.image || ""} alt={user?.name || ""} />
-                                <AvatarFallback className="bg-indigo-100 text-indigo-700 font-bold">
+                                <AvatarFallback className="bg-primary/10 text-primary font-bold">
                                     {user?.name?.charAt(0) || "U"}
                                 </AvatarFallback>
                             </Avatar>

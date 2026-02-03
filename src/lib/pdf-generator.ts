@@ -358,6 +358,8 @@ export const generateMiqaatBookingForm = async (
     items: { label: string; quantity: string; rate: string; total: string }[];
     grandTotal: string;
     deposit?: string;
+    paymentMode?: string;
+    transactionId?: string;
   },
 ) => {
   const doc = new jsPDF();
@@ -798,40 +800,21 @@ export const generateMiqaatBookingForm = async (
     doc.text(displayedTotal, margin + availableWidth - 2, finalY + 5, {
       align: "right",
     });
-    finalY += 8;
-
-    // Separate Deposit Box
-    if (depositItem) {
-      finalY += 4;
-      doc.setDrawColor(203, 213, 225); // Slate-300
-      doc.setLineWidth(0.1);
-      doc.rect(margin, finalY, availableWidth, 14); // 14 height for 2 lines logic
-
-      doc.setFontSize(9);
-      doc.text("Refundable Deposit", margin + 4, finalY + 6);
-      doc.setFont("helvetica", "bold");
-      doc.text(depositItem.total, margin + availableWidth - 4, finalY + 6, {
-        align: "right",
-      });
-
-      // Returned Date Field
-      doc.setFont("helvetica", "normal");
+    // Payment Details Box (Below Grand Total)
+    if (pdfData.paymentMode) {
+      const paymentY = finalY + 12;
       doc.setFontSize(8);
-      doc.setTextColor(100, 116, 139);
-      doc.text(
-        "Returned On: ________________________",
-        margin + 4,
-        finalY + 11,
-      );
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(70, 70, 70);
+      doc.text("Payment Details:", margin, paymentY);
 
-      // Signature line for receiver
-      doc.text(
-        "Receiver Sig: __________________",
-        margin + availableWidth / 2,
-        finalY + 11,
-      );
+      doc.setFont("helvetica", "normal");
+      let paymentText = `Mode: ${pdfData.paymentMode}`;
+      if (pdfData.transactionId)
+        paymentText += ` | Tx Ref: ${pdfData.transactionId}`;
 
-      finalY += 16;
+      doc.setTextColor(30, 41, 59);
+      doc.text(paymentText, margin + 25, paymentY);
     }
   } else {
     // Fallback normal table if no items
@@ -839,7 +822,7 @@ export const generateMiqaatBookingForm = async (
       { label: "Rs. Per Thaal", value: "" },
       { label: "Rs. Sarkari", value: "" },
       { label: "Rs. Kitchen", value: "" },
-      { label: "Decoration", value: event.decorations ? "Yes" : "No" },
+      { label: "Decoration", value: (event as any).decorations ? "Yes" : "No" },
       { label: "Other", value: "" },
     ];
     const bodyRows = lagatLabels.map((l) => [l.label, "", "", l.value]);

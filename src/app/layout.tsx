@@ -70,19 +70,19 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="msapplication-TileColor" content="#258522ff" />
+        <meta name="msapplication-TileColor" content="#6A1B1B" />
         <meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
-        <meta name="theme-color" content="#258522ff" />
+        <meta name="theme-color" content="#6A1B1B" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NextTopLoader color="#d97706" showSpinner={false} />
+        <NextTopLoader color="#C6A868" showSpinner={false} />
         <Providers>
           <CommandMenu />
           {children}
         </Providers>
       </body>
-    </html>
+    </html >
   );
 }

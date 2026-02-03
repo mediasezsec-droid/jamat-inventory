@@ -55,100 +55,100 @@
   /* Design System: Radius */
   --radius: 0.625rem; /* 10px for cards */
 
-  /* Design System: Palette */
-  --background: #F8FAFC; /* Slate 50 - Page BG */
-  --foreground: #0F172A; /* Slate 900 */
+  /* Design System: Palette (Fatemi/Sezsec Theme) */
+  --background: #FDFBF7; /* Cream/Off-white */
+  --foreground: #3E2F2F; /* Dark Brownish Grey */
 
   --card: #FFFFFF;
-  --card-foreground: #0F172A;
+  --card-foreground: #3E2F2F;
 
   --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
+  --popover-foreground: #3E2F2F;
 
-  --primary: #0F172A; /* Slate 900 */
+  --primary: #6A1B1B; /* Deep Maroon/Burgundy */
   --primary-foreground: #FFFFFF;
 
-  --secondary: #F1F5F9; /* Slate 100 */
-  --secondary-foreground: #0F172A;
+  --secondary: #F7EEE9; /* Light reddish beige */
+  --secondary-foreground: #6A1B1B;
 
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B; /* Slate 500 */
+  --muted: #F3E8E8;
+  --muted-foreground: #8C7575;
 
-  --accent: #10B981; /* Emerald 500 - Positive Accent */
+  --accent: #C6A868; /* Gold/Metallic */
   --accent-foreground: #FFFFFF;
 
-  --destructive: #EF4444; /* Red 500 */
+  --destructive: #9B1C1C;
   --destructive-foreground: #FFFFFF;
 
-  --border: #E2E8F0; /* Slate 200 */
-  --input: #E2E8F0;
-  --ring: #0F172A;
+  --border: #E8D5D5;
+  --input: #E8D5D5;
+  --ring: #6A1B1B;
 
   /* Chart Colors */
-  --chart-1: #10B981; /* Emerald */
-  --chart-2: #3B82F6; /* Blue */
-  --chart-3: #F59E0B; /* Amber */
-  --chart-4: #EF4444; /* Red */
-  --chart-5: #8B5CF6; /* Violet */
+  --chart-1: #6A1B1B; /* Maroon */
+  --chart-2: #C6A868; /* Gold */
+  --chart-3: #D97706; /* Amber */
+  --chart-4: #2D5A27; /* Deep Green */
+  --chart-5: #1E293B; /* Slate */
 
-  /* Dark Sidebar */
-  --sidebar: #0F172A; /* Slate 900 */
-  --sidebar-foreground: #CBD5E1; /* Slate 300 */
-  --sidebar-primary: #FFFFFF;
-  --sidebar-primary-foreground: #0F172A;
-  --sidebar-accent: #1E293B; /* Slate 800 */
-  --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #1E293B;
-  --sidebar-ring: #3B82F6;
+  /* Dark Sidebar (remains dark or matches primary?) - Let's keep it dark slate for admin contrast or match maroon? User said "same theme". Let's try Maroon sidebar for full immersion */
+  --sidebar: #4A1010; /* Darker Maroon */
+  --sidebar-foreground: #FDFBF7;
+  --sidebar-primary: #C6A868; /* Gold */
+  --sidebar-primary-foreground: #4A1010;
+  --sidebar-accent: #5F1515;
+  --sidebar-accent-foreground: #FDFBF7;
+  --sidebar-border: #5F1515;
+  --sidebar-ring: #C6A868;
 
   /* Design System: Shadows */
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 4px 8px rgba(0,0,0,0.04);
-  --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-card: 0 1px 3px rgba(106, 27, 27, 0.05), 0 4px 8px rgba(106, 27, 27, 0.05);
+  --shadow-card-hover: 0 4px 12px rgba(106, 27, 27, 0.1), 0 2px 4px rgba(106, 27, 27, 0.05);
 }
 
 .dark {
-  --background: #020617;
-  --foreground: #F8FAFC;
+  --background: #1A0505; /* Very dark maroon/black */
+  --foreground: #FDFBF7;
 
-  --card: #0F172A;
-  --card-foreground: #F8FAFC;
+  --card: #2A0A0A;
+  --card-foreground: #FDFBF7;
 
-  --popover: #0F172A;
-  --popover-foreground: #F8FAFC;
+  --popover: #2A0A0A;
+  --popover-foreground: #FDFBF7;
 
-  --primary: #F8FAFC;
-  --primary-foreground: #0F172A;
+  --primary: #FDFBF7;
+  --primary-foreground: #6A1B1B;
 
-  --secondary: #1E293B;
-  --secondary-foreground: #F8FAFC;
+  --secondary: #3E1010;
+  --secondary-foreground: #FDFBF7;
 
-  --muted: #1E293B;
-  --muted-foreground: #94A3B8;
+  --muted: #3E1010;
+  --muted-foreground: #C0A0A0;
 
-  --accent: #10B981;
+  --accent: #C6A868;
   --accent-foreground: #FFFFFF;
 
   --destructive: #7F1D1D;
-  --destructive-foreground: #F8FAFC;
+  --destructive-foreground: #FDFBF7;
 
-  --border: #1E293B;
-  --input: #1E293B;
-  --ring: #CBD5E1;
+  --border: #3E1010;
+  --input: #3E1010;
+  --ring: #C6A868;
 
-  --chart-1: #22D3EE;
-  --chart-2: #2DD4BF;
-  --chart-3: #FBBF24;
-  --chart-4: #F87171;
+  --chart-1: #C6A868;
+  --chart-2: #6A1B1B;
+  --chart-3: #D97706;
+  --chart-4: #EF4444;
   --chart-5: #A78BFA;
 
-  --sidebar: #020617;
-  --sidebar-foreground: #CBD5E1;
-  --sidebar-primary: #3B82F6;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #1E293B;
-  --sidebar-accent-foreground: #F8FAFC;
-  --sidebar-border: #1E293B;
-  --sidebar-ring: #3B82F6;
+  --sidebar: #1A0505;
+  --sidebar-foreground: #C0A0A0;
+  --sidebar-primary: #C6A868;
+  --sidebar-primary-foreground: #1A0505;
+  --sidebar-accent: #2A0A0A;
+  --sidebar-accent-foreground: #FDFBF7;
+  --sidebar-border: #2A0A0A;
+  --sidebar-ring: #C6A868;
 }
 
 @layer base {
@@ -156,11 +156,26 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground antialiased;
-    /* Fatemi/Islamic Geometric Pattern - 8-point star lattice */
-    background-color: #f8fafc;
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l15 15-15 15-15-15L30 0zM0 30l15 15-15 15-15-15L0 30zm60 0l15 15-15 15-15-15 15-15zM30 60l15 15-15 15-15-15L30 60z' fill='%2394a3b8' fill-opacity='0.15' fill-rule='evenodd'/%3E%3Cpath d='M30 0v60M0 30h60' stroke='%2394a3b8' stroke-width='1' stroke-opacity='0.1'/%3E%3C/svg%3E");
-    background-size: 60px 60px;
+    @apply text-foreground antialiased;
+    position: relative;
+    min-height: 100vh;
+  }
+  
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background-color: hsl(var(--background));
+    /* Fatemi Pattern */
+    background-image: url("/bg.svg");
+    background-size: 30%;
+    background-repeat: repeat;
+    background-position: center;
+    pointer-events: none;
   }
 }
 

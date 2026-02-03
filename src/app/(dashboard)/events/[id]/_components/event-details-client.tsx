@@ -86,54 +86,10 @@ export default function EventDetailsClient({ initialEvent, initialInventory, ini
     const [thaalServedCount, setThaalServedCount] = useState("");
     const [isSavingThaal, setIsSavingThaal] = useState(false);
 
-    // Payment Dialog State
-    const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-    const [paymentMode, setPaymentMode] = useState<"CASH" | "UPI">("CASH");
-    const [transactionId, setTransactionId] = useState("");
-    const [isSavingPayment, setIsSavingPayment] = useState(false);
 
     const handlePrint = () => {
-        // Pre-fill if exists
-        if ((event as any).paymentMode) setPaymentMode((event as any).paymentMode);
-        if ((event as any).transactionId) setTransactionId((event as any).transactionId);
-        setPaymentDialogOpen(true);
+        router.push(`/events/${event.id}/print`);
     };
-
-    const handleConfirmPrint = async () => {
-        if (paymentMode === "UPI" && !transactionId) {
-            toast.error("Please enter Transaction ID for UPI");
-            return;
-        }
-
-        setIsSavingPayment(true);
-        try {
-            const res = await fetch(`/api/events/${event.id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    paymentMode,
-                    transactionId: paymentMode === "UPI" ? transactionId : null
-                }),
-            });
-
-            if (!res.ok) throw new Error("Failed to save payment info");
-
-            // Update local state
-            setEvent(prev => ({ ...prev, paymentMode, transactionId } as any));
-            toast.success("Payment info saved");
-            setPaymentDialogOpen(false);
-
-            // Navigate to print page
-            router.push(`/events/${event.id}/print`);
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to save payment info");
-        } finally {
-            setIsSavingPayment(false);
-        }
-    };
-
-    // Update Thaal Served
     const handleUpdateThaalServed = async () => {
         const count = parseInt(thaalServedCount);
         if (!count || count < 0) {
@@ -645,76 +601,7 @@ export default function EventDetailsClient({ initialEvent, initialInventory, ini
                 </div>
             </div>
 
-            {/* Delete Confirmation Dialog */}
-            {deleteConfirmOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-6 animate-in zoom-in-95 duration-200 shadow-2xl ring-1 ring-slate-900/5">
-                        <div className="flex items-center gap-4 text-red-600">
-                            <div className="bg-red-100 p-3 rounded-full shrink-0">
-                                <AlertTriangle className="h-6 w-6" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-slate-900">Related Data Found</h3>
-                                <p className="text-slate-500 text-sm">Cannot simply delete this event.</p>
-                            </div>
-                        </div>
-                        <div className="text-slate-600 text-sm leading-relaxed">
-                            <p className="mb-2">This event has <strong>{relatedData?.count} inventory logs</strong> associated with it.</p>
-                            <p>Deleting it will <strong>permanently remove</strong> the event record and all associated history logs from the database.</p>
-                        </div>
-                        <div className="flex justify-end gap-3 pt-2">
-                            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
-                            <Button variant="destructive" onClick={() => handleDeleteEvent(true)}>Permanently Delete</Button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
-            {/* Payment Dialog for Print */}
-            <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Payment Details</DialogTitle>
-                        <DialogDescription>
-                            Please confirm payment details proceed to print.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label>Payment Mode</Label>
-                            <RadioGroup value={paymentMode} onValueChange={(v: "CASH" | "UPI") => setPaymentMode(v)} className="flex gap-4">
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="CASH" id="mode-cash" />
-                                    <Label htmlFor="mode-cash">Cash</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="UPI" id="mode-upi" />
-                                    <Label htmlFor="mode-upi">UPI / Online</Label>
-                                </div>
-                            </RadioGroup>
-                        </div>
-
-                        {paymentMode === "UPI" && (
-                            <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                                <Label htmlFor="tx-id">Transaction ID <span className="text-red-500">*</span></Label>
-                                <Input
-                                    id="tx-id"
-                                    placeholder="Enter UPI Transaction ID"
-                                    value={transactionId}
-                                    onChange={(e) => setTransactionId(e.target.value)}
-                                />
-                            </div>
-                        )}
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>Cancel</Button>
-                        <Button onClick={handleConfirmPrint} disabled={isSavingPayment} className="bg-emerald-600 hover:bg-emerald-700">
-                            {isSavingPayment && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Save & Print
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
             {/* Thaal Served Update Drawer */}
             <Drawer open={thaalDrawerOpen} onOpenChange={setThaalDrawerOpen}>
