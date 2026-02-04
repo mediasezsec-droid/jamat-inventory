@@ -56,11 +56,24 @@ model User {
   events        Event[]        @relation("CreatedBy")
   moduleAccess  UserModuleAccess[]
   
-  // Fee Relations
   feeConfig       UserFeeConfig?
   feeRecords      FeeRecord[]
   eventContributions EventContribution[]
   feeTransactions FeeTransaction[]
+
+  // Attendance & Structure
+  its             String?        @unique // ITS Number
+  headedById      String?
+  headedBy        User?          @relation("UserHeads", fields: [headedById], references: [id])
+  usersGuided     User[]         @relation("UserHeads") // Users this person heads
+
+  // Relations to Floor Config (Person can be Head, SubHead, or Member)
+  floorHeadOf     FloorConfig[]  @relation("FloorHeads")
+  floorSubHeadOf  FloorConfig[]  @relation("FloorSubHeads")
+  floorMemberOf   FloorConfig[]  @relation("FloorMembers")
+
+  attendanceRecords AttendanceRecord[] @relation("Attendee")
+  attendanceMarked  AttendanceRecord[] @relation("Marker")
 
   @@map("users")
 }
@@ -156,6 +169,10 @@ model Event {
 
   // Relation to inventory allocations
   inventoryAllocations EventInventory[]
+  
+  // Attendance Relations
+  attendanceRecords    AttendanceRecord[]
+  attendanceClone      AttendanceEventClone?
 
   @@map("events")
 }
@@ -420,3 +437,56 @@ model FeeTransactionAllocation {
   @@map("fee_transaction_allocations")
 }
 
+// ----------------------------------------------------------------------
+// Attendance Module Schema
+// ----------------------------------------------------------------------
+
+model FloorConfig {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g., "Level 1 Hall A"
+  
+  heads       User[]   @relation("FloorHeads")
+  subHeads    User[]   @relation("FloorSubHeads")
+  members     User[]   @relation("FloorMembers")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("floor_configs")
+}
+
+model AttendanceRecord {
+  id          String   @id @default(cuid())
+  
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  userId      String
+  user        User     @relation("Attendee", fields: [userId], references: [id], onDelete: Cascade)
+
+  markedById  String?
+  markedBy    User?    @relation("Marker", fields: [markedById], references: [id])
+
+  status      String   @default("PRESENT") // PRESENT, ABSENT, EXCUSED
+  
+  timestamp   DateTime @default(now())
+  
+  @@unique([eventId, userId]) // User can only be marked once per event
+  @@map("attendance_records")
+}
+
+model AttendanceEventClone {
+  id          String   @id @default(cuid())
+  
+  // Link to the original Event (Public or Private)
+  eventId     String   @unique
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  isActive    Boolean  @default(true)
+  startTime   DateTime // Custom start time for attendance (usually event time)
+  endTime     DateTime // Custom end time (usually event time + 6h)
+  
+  createdAt   DateTime @default(now())
+
+  @@map("attendance_event_clones")
+}
