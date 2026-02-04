@@ -36,7 +36,7 @@
     "/settings/data/export": ["ADMIN"],
     "/settings/data/restore": ["ADMIN"],
     "/settings/data/sync": ["ADMIN"],
-    "/settings/data/health": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
+    "/settings/data/health": ["ADMIN", "MANAGER"],
     "/settings/data/reset": ["ADMIN"],
     "/settings/data": ["ADMIN"],
     "/settings/email-test": ["ADMIN"],
@@ -109,7 +109,7 @@
     "nav-item-export-data": ["ADMIN"],
     "nav-item-restore-data": ["ADMIN"],
     "nav-item-sync-status": ["ADMIN"],
-    "nav-item-system-health": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
+    "nav-item-system-health": ["ADMIN", "MANAGER"],
     "nav-item-reset-system": ["ADMIN"]
   }
 }

@@ -61,6 +61,10 @@ export default function EventsPage({ initialEvents }: EventsPageProps) {
     const [relatedData, setRelatedData] = useState<{ count: number } | null>(null);
     const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
+    // Raza Confirmation State
+    const [razaConfirmOpen, setRazaConfirmOpen] = useState(false);
+    const [razaTarget, setRazaTarget] = useState<{ id: string, name: string, currentStatus: boolean } | null>(null);
+
     useEffect(() => {
         const lower = search.toLowerCase();
         const filtered = events.filter(e =>
@@ -121,6 +125,36 @@ export default function EventsPage({ initialEvents }: EventsPageProps) {
         } catch (error) {
             console.error("Failed to delete event", error);
             toast.error("Delete failed");
+        }
+    };
+
+    const handleRazaClick = (e: React.MouseEvent, event: Event) => {
+        e.stopPropagation();
+        setRazaTarget({
+            id: event.id,
+            name: event.name,
+            currentStatus: event.razaGranted || false
+        });
+        setRazaConfirmOpen(true);
+    };
+
+    const confirmRazaToggle = async () => {
+        if (!razaTarget) return;
+
+        const newValue = !razaTarget.currentStatus;
+        try {
+            const res = await fetch(`/api/events/${razaTarget.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ razaGranted: newValue }),
+            });
+            if (!res.ok) throw new Error("Failed");
+            toast.success(newValue ? "Raza Granted" : "Raza Revoked");
+            setRazaConfirmOpen(false);
+            setRazaTarget(null);
+            router.refresh();
+        } catch (err) {
+            toast.error("Failed to update Raza status");
         }
     };
 
@@ -255,7 +289,7 @@ export default function EventsPage({ initialEvents }: EventsPageProps) {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                                 {filteredEvents
                                     .filter(e => isToday(getISTDate(e.occasionDate)))
-                                    .map(event => <EventCard key={event.id} event={event} router={router} isAdmin={isAdmin} handleDeleteClick={handleDeleteClick} getStatusBadge={getStatusBadge} />)
+                                    .map(event => <EventCard key={event.id} event={event} router={router} isAdmin={isAdmin} handleDeleteClick={handleDeleteClick} handleRazaClick={handleRazaClick} getStatusBadge={getStatusBadge} />)
                                 }
                             </div>
                         ) : (
@@ -269,7 +303,7 @@ export default function EventsPage({ initialEvents }: EventsPageProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                             {filteredEvents
                                 .filter(e => isFuture(getISTDate(e.occasionDate)))
-                                .map(event => <EventCard key={event.id} event={event} router={router} isAdmin={isAdmin} handleDeleteClick={handleDeleteClick} getStatusBadge={getStatusBadge} />)
+                                .map(event => <EventCard key={event.id} event={event} router={router} isAdmin={isAdmin} handleDeleteClick={handleDeleteClick} handleRazaClick={handleRazaClick} getStatusBadge={getStatusBadge} />)
                             }
                         </div>
                     </TabsContent>
@@ -278,7 +312,7 @@ export default function EventsPage({ initialEvents }: EventsPageProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 opacity-80 hover:opacity-100 transition-opacity">
                             {filteredEvents
                                 .filter(e => isPast(getISTDate(e.occasionDate)) && !isToday(getISTDate(e.occasionDate)))
-                                .map(event => <EventCard key={event.id} event={event} router={router} isAdmin={isAdmin} handleDeleteClick={handleDeleteClick} getStatusBadge={getStatusBadge} />)
+                                .map(event => <EventCard key={event.id} event={event} router={router} isAdmin={isAdmin} handleDeleteClick={handleDeleteClick} handleRazaClick={handleRazaClick} getStatusBadge={getStatusBadge} />)
                             }
                         </div>
                     </TabsContent>
@@ -309,35 +343,46 @@ export default function EventsPage({ initialEvents }: EventsPageProps) {
                     </div>
                 </div>
             )}
+
+            {/* Raza Confirmation Dialog */}
+            {razaConfirmOpen && razaTarget && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-200 shadow-2xl">
+                        <div className={`flex items-center gap-3 ${razaTarget.currentStatus ? 'text-red-600' : 'text-emerald-600'}`}>
+                            <div className={`${razaTarget.currentStatus ? 'bg-red-100' : 'bg-emerald-100'} p-2 rounded-full`}>
+                                <ShieldCheck className="h-6 w-6" />
+                            </div>
+                            <h3 className="text-lg font-bold">{razaTarget.currentStatus ? "Revoke Raza?" : "Grant Raza?"}</h3>
+                        </div>
+                        <p className="text-slate-600">
+                            Are you sure you want to <strong>{razaTarget.currentStatus ? "REVOKE" : "GRANT"}</strong> Raza for <strong>{razaTarget.name}</strong>?
+                        </p>
+                        {!razaTarget.currentStatus && (
+                            <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100 text-sm text-emerald-800">
+                                This will mark the event as approved.
+                            </div>
+                        )}
+                        <div className="flex justify-end gap-3 pt-2">
+                            <Button variant="outline" onClick={() => { setRazaConfirmOpen(false); setRazaTarget(null); }}>Cancel</Button>
+                            <Button
+                                className={razaTarget.currentStatus ? "bg-red-600 hover:bg-red-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"}
+                                onClick={confirmRazaToggle}
+                            >
+                                {razaTarget.currentStatus ? "Yes, Revoke" : "Yes, Grant"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
-function EventCard({ event, router, isAdmin, handleDeleteClick, getStatusBadge }: any) {
+function EventCard({ event, router, isAdmin, handleDeleteClick, handleRazaClick, getStatusBadge }: any) {
     const isCancelled = event.status === "CANCELLED";
     const istDate = getISTDate(event.occasionDate);
     const hijri = getMisriDate(istDate);
-    const [razaGranted, setRazaGranted] = useState(event.razaGranted || false);
-
-    const handleRazaToggle = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        const newValue = !razaGranted;
-        setRazaGranted(newValue); // Optimistic
-
-        try {
-            const res = await fetch(`/api/events/${event.id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ razaGranted: newValue }),
-            });
-            if (!res.ok) throw new Error("Failed");
-            toast.success(newValue ? "Raza Granted" : "Raza Revoked");
-            router.refresh();
-        } catch (err) {
-            setRazaGranted(!newValue); // Revert
-            toast.error("Failed to update Raza status");
-        }
-    };
+    const razaGranted = event.razaGranted || false;
 
     // Card Colors: Cancelled (Grey), Raza Granted (Subtle Green), Raza Pending (Subtle Orange)
     // Note: status === CANCELLED overrides everything
@@ -421,7 +466,7 @@ function EventCard({ event, router, isAdmin, handleDeleteClick, getStatusBadge }
                         <Switch
                             checked={razaGranted}
                             onCheckedChange={() => { }}
-                            onClick={handleRazaToggle}
+                            onClick={(e) => handleRazaClick(e, event)}
                             className="data-[state=checked]:bg-emerald-600 data-[state=unchecked]:bg-orange-400"
                             disabled={isCancelled || isEventLocked(event.occasionDate)}
                         />

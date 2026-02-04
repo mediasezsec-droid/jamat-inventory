@@ -765,24 +765,6 @@ export const generateMiqaatBookingForm = async (
     const rightFinalY = (doc as any).lastAutoTable?.finalY || currentY;
     finalY = Math.max(leftFinalY, rightFinalY);
 
-    // Calc Total excluding Deposit
-    // pdfData.grandTotal is string "12,345", convert to number
-    let totalVal = parseFloat(pdfData.grandTotal.replace(/[^0-9.-]+/g, ""));
-    const depositItem = pdfData.items.find(
-      (i) => i.label === "Refundable Deposit",
-    );
-
-    if (depositItem) {
-      const depositVal = parseFloat(
-        depositItem.total.replace(/[^0-9.-]+/g, ""),
-      );
-      if (!isNaN(depositVal)) {
-        totalVal = totalVal - depositVal;
-      }
-    }
-
-    const displayedTotal = new Intl.NumberFormat("en-IN").format(totalVal);
-
     // Grand Total Row (Full Width spanning tables space)
     doc.setFillColor(241, 245, 249); // Slate-100 header style
     doc.rect(margin, finalY, availableWidth, 8, "F");
@@ -797,7 +779,7 @@ export const generateMiqaatBookingForm = async (
         align: "right",
       },
     );
-    doc.text(displayedTotal, margin + availableWidth - 2, finalY + 5, {
+    doc.text(pdfData.grandTotal, margin + availableWidth - 2, finalY + 5, {
       align: "right",
     });
     // Payment Details Box (Below Grand Total)

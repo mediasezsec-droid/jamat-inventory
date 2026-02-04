@@ -55,6 +55,12 @@ model User {
 
   events        Event[]        @relation("CreatedBy")
   moduleAccess  UserModuleAccess[]
+  
+  // Fee Relations
+  feeConfig       UserFeeConfig?
+  feeRecords      FeeRecord[]
+  eventContributions EventContribution[]
+  feeTransactions FeeTransaction[]
 
   @@map("users")
 }
@@ -327,5 +333,90 @@ model VerificationCode {
 
   @@index([email])
   @@map("verification_codes")
+}
+
+// Fee Management Models
+
+model UserFeeConfig {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int      @default(0) // Default monthly fee
+  updatedAt DateTime @updatedAt
+
+  @@map("user_fee_configs")
+}
+
+enum FeeStatus {
+  PENDING
+  PARTIAL
+  PAID
+}
+
+model FeeRecord {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  month       Int       // 0-11
+  year        Int
+  amount      Int       // Amount due for this month
+  paidAmount  Int       @default(0)
+  status      FeeStatus @default(PENDING)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  allocations FeeTransactionAllocation[]
+
+  @@unique([userId, month, year])
+  @@map("fee_records")
+}
+
+model FeeTransaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  mode      String   // UPI, CASH
+  reference String?  // UPI Ref ID
+  note      String?
+  date      DateTime @default(now())
+
+  allocations FeeTransactionAllocation[]
+
+  @@map("fee_transactions")
+}
+
+// Event / Ad-hoc Contributions
+model EventContribution {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String    // e.g. "Urs Mubaraka 1446H"
+  amount      Int
+  paidAmount  Int       @default(0)
+  status      FeeStatus @default(PENDING)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  allocations FeeTransactionAllocation[]
+
+  @@map("event_contributions")
+}
+
+model FeeTransactionAllocation {
+  id                 String             @id @default(cuid())
+  transactionId      String
+  transaction        FeeTransaction     @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  
+  // Allocate to either Monthly Fee OR Event Contribution
+  feeRecordId        String?
+  feeRecord          FeeRecord?         @relation(fields: [feeRecordId], references: [id], onDelete: Cascade)
+
+  eventContributionId String?
+  eventContribution   EventContribution? @relation(fields: [eventContributionId], references: [id], onDelete: Cascade)
+
+  allocatedAmount    Int
+
+  @@map("fee_transaction_allocations")
 }
 
