@@ -7,6 +7,7 @@
 
     "/events": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
     "/events/new": ["ADMIN", "MANAGER"],
+
     "/events/calendar": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
     "/events/[id]": ["ADMIN", "MANAGER", "STAFF", "WATCHER"],
     "/events/[id]/edit": ["ADMIN", "MANAGER"],

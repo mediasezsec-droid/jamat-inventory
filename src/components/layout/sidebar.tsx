@@ -54,7 +54,6 @@ const routeGroups = [
         label: "Management",
         items: [
             { label: "Users", icon: Users, href: "/settings/users" },
-            { label: "Add User", icon: UserPlus, href: "/users/add" },
             { label: "Venues", icon: Building2, href: "/settings/venues" },
             { label: "Caterers", icon: ChefHat, href: "/settings/caterers" },
         ]

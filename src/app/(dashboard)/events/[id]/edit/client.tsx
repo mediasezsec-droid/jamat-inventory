@@ -225,6 +225,7 @@ export default function EditEventClient() {
                         hall: watchedHall,
                         excludeEventId: eventId // Passing this optimistically, hoping logic uses it or ignores it.
                     }),
+                    cache: "no-store"
                 });
 
                 if (res.ok) {

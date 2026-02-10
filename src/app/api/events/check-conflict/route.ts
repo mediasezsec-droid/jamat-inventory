@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { rtdb } from "@/lib/firebase";
 import { Event } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
